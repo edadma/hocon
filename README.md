@@ -15,8 +15,37 @@ Unlike `com.typesafe:config`, which is JVM-only, **hocon** is written in pure Sc
 `java.*` dependencies in its core, so the same parser runs on the **JVM**, in the browser/Node.js
 via **Scala.js**, and as a native binary via **Scala Native**.
 
-> **Status:** early development. The parser and untyped `Config` API are the first milestone;
+> **Status:** Phase 1 complete — the lexer, parser, and untyped `Config` API are in and tested on
+> all three platforms. This is enough to read i18n message files today. Object merging,
 > substitutions, includes, and a typed (case-class) decoder follow. See the roadmap below.
+
+## Usage
+
+```scala
+import io.github.edadma.hocon.*
+
+val config = Hocon.parse("""
+  en {
+    greeting = "Hello, world"
+    nav { home = "Home", about = "About" }
+    cart.items = "{count} items"   # path-expression key
+  }
+""")
+
+config.getString("en.greeting")   // "Hello, world"
+config.getString("en.nav.home")   // "Home"
+config.getConfig("en").getInt("...")
+config.hasPath("en.missing")      // false
+
+// i18n placeholder helper
+val msg = Messages(config.getConfig("en"))
+msg("cart.items", "count" -> 3)   // "3 items"
+```
+
+A note on quoting: HOCON allows unquoted strings, but forbids the characters
+`$ " { } [ ] : = , + # ` ^ ? ! @ * &` and `\` inside them. Most UI strings (`Hello, world`,
+`Are you sure?`, `{count} items`) hit one of these, so **quote your translation strings**. This is
+spec-correct HOCON, not a limitation of this library.
 
 ## Why
 
@@ -37,15 +66,15 @@ hocon fills.
 
 ## Roadmap
 
-| Phase | Scope |
-|------:|-------|
-| **1** | Lexer + parser → untyped `Config` (comments, quoted/unquoted strings, nested objects, path-expression keys, arrays). **i18n-usable.** |
-| **2** | Object merging + `withFallback` (base locale + overrides). |
-| **3** | Substitutions: `${path}`, `${?path}`, env fallback, cycle detection. |
-| **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). |
-| **5** | `include` directives behind a pluggable, per-platform IO source. |
-| **6** | Typed decoder with case-class derivation (`config.as[A]`). |
-| **7** | Conformance against the Typesafe spec's test corpus. |
+| Phase | Scope | Status |
+|------:|-------|:------:|
+| **1** | Lexer + parser → untyped `Config` (comments, quoted/unquoted strings, nested objects, path-expression keys, arrays). **i18n-usable.** | ✅ |
+| **2** | Object merging + `withFallback` (base locale + overrides). | |
+| **3** | Substitutions: `${path}`, `${?path}`, env fallback, cycle detection. | |
+| **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | |
+| **5** | `include` directives behind a pluggable, per-platform IO source. | |
+| **6** | Typed decoder with case-class derivation (`config.as[A]`). | |
+| **7** | Conformance against the Typesafe spec's test corpus. | |
 
 ## Building and Testing
 
