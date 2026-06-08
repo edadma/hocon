@@ -53,6 +53,9 @@ lazy val hocon = crossProject(JSPlatform, JVMPlatform, NativePlatform)
         "-language:existentials",
         "-language:dynamics",
       ),
+    // Scaladoc doesn't support the Scala.js/Native nscplugin -Xplugin option; drop it for `doc` only
+    // so `doc`/`publishSigned` don't warn (compilation keeps it).
+    Compile / doc / scalacOptions ~= { _.filterNot(_.startsWith("-Xplugin")) },
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.19" % "test",
     libraryDependencies += "io.github.edadma" %%% "cross_platform" % "0.1.7",
     publishMavenStyle      := true,

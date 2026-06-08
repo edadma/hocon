@@ -3,7 +3,7 @@ package io.github.edadma.hocon
 import io.github.edadma.cross_platform.{readFile, readableFile}
 import scala.util.Try
 
-/** How an `include` named its target. The bare `include "x"` form is [[Heuristic]] — the source
+/** How an `include` named its target. The bare `include "x"` form is `Heuristic` — the source
   * decides where to look; the qualified forms pin the lookup to a single mechanism.
   */
 enum IncludeKind:
@@ -32,8 +32,8 @@ object ConfigSource:
   def fromMap(resources: Map[String, String]): ConfigSource = (_, spec) => resources.get(spec)
 
   /** Reads include targets from the local filesystem through the cross-platform file API, so the same
-    * code serves the JVM, Scala.js (Node), and Scala Native identically. The [[IncludeKind.File]] and
-    * bare [[IncludeKind.Heuristic]] forms are honoured; [[IncludeKind.Url]] and [[IncludeKind.Classpath]]
+    * code serves the JVM, Scala.js (Node), and Scala Native identically. The `IncludeKind.File` and
+    * bare `IncludeKind.Heuristic` forms are honoured; `IncludeKind.Url` and `IncludeKind.Classpath`
     * resolve to `None`, since neither has a portable meaning — supply a [[ConfigSource.fromMap]] or a
     * custom source to serve those qualifiers.
     */
