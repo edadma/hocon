@@ -25,12 +25,14 @@ final case class Config(root: ConfigObject):
     case Some(v)                 => v
 
   private def typeName(v: ConfigValue): String = v match
-    case _: ConfigObject  => "object"
-    case _: ConfigArray   => "list"
-    case _: ConfigString  => "string"
-    case _: ConfigNumber  => "number"
-    case _: ConfigBoolean => "boolean"
-    case ConfigNull       => "null"
+    case _: ConfigObject       => "object"
+    case _: ConfigArray        => "list"
+    case _: ConfigString       => "string"
+    case _: ConfigNumber       => "number"
+    case _: ConfigBoolean      => "boolean"
+    case ConfigNull            => "null"
+    case _: ConfigSubstitution => "substitution"
+    case ResolveMissing        => "missing"
 
   def getString(path: String): String = requirePath(path) match
     case ConfigString(s)  => s
@@ -94,7 +96,16 @@ final case class Config(root: ConfigObject):
 
 /** Entry point: parse and combine HOCON documents. */
 object Hocon:
-  def parse(input: String): Config = Parser(Lexer(input).tokenize()).parse()
+
+  /** Parse HOCON source and resolve its `${...}` substitutions. Substitutions resolve against this
+    * document only; required ones that are found nowhere raise [[UnresolvedSubstitutionException]].
+    */
+  def parse(input: String): Config = parse(input, EnvSource.empty)
+
+  /** Parse and resolve, falling back to `env` for any substitution not found in the document. */
+  def parse(input: String, env: EnvSource): Config =
+    val root = Parser(Lexer(input).tokenize()).parseRoot()
+    Config(Resolver.resolve(root, env))
 
   /** Merge configs so that later arguments win over earlier ones — i.e. pass the base first and the
     * most specific overrides last. With no arguments this is the empty config.

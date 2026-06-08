@@ -135,14 +135,27 @@ users = [
 ]
 ```
 
+## Substitutions
+
+`${path}` references another value, and `${?path}` is its optional form. They resolve against
+the merged document, so they are order-independent:
+
+```hocon
+host = localhost
+url  = ${host}        # → "localhost"
+```
+
+See the [substitutions guide](/guide/substitutions/) for the full rules — environment
+fallback, object copying, and cycle detection.
+
 ## Not yet supported
 
 These parts of the full HOCON spec are on the [roadmap](/guide/roadmap/) but not implemented
 yet:
 
-- **Substitutions** — `${path}` and `${?path}`. A `$` currently raises a parse error.
 - **Value concatenation** — joining `a "b" ${c}` into one value. A scalar value today is a
-  single quoted string or a bare run trimmed to its terminator.
+  single quoted string, a single substitution, or a bare run trimmed to its terminator;
+  mixing them raises a parse error.
 - **Durations and sizes** — `10s`, `512K`, `10MB` are parsed as plain strings for now.
 - **`include`** — pulling in other files.
 

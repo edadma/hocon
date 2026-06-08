@@ -13,8 +13,14 @@ These live on the `Hocon` object.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `Hocon.parse(input: String)` | `Config` | Parse HOCON source text. Throws `ParseError` on a syntax error. |
+| `Hocon.parse(input: String)` | `Config` | Parse HOCON source and resolve `${...}` substitutions. Throws `ParseError` on a syntax error. |
+| `Hocon.parse(input: String, env: EnvSource)` | `Config` | As above, falling back to `env` for substitutions absent from the document. |
 | `Hocon.load(configs: Config*)` | `Config` | Merge configs so that **later arguments win**. No arguments → the empty config. |
+
+`EnvSource` is the seam substitutions use for environment fallback. The default is
+`EnvSource.empty`; build one from a map with `EnvSource.fromMap(...)`, or implement the
+single-method trait to wire in the real environment. See the
+[substitutions guide](/guide/substitutions/).
 
 ```scala
 import io.github.edadma.hocon.*
@@ -94,3 +100,6 @@ All errors extend `HoconException`:
 - `ParseError(message, line, col)` — a syntax error, with 1-based source position.
 - `MissingPathException(path)` — nothing at the requested path (or it is `null`).
 - `WrongTypeException(path, expected, found)` — the value is the wrong type for the getter.
+- `UnresolvedSubstitutionException(path)` — a required `${path}` found in neither the config
+  nor the environment.
+- `CircularReferenceException(chain)` — substitutions reference each other in a cycle.

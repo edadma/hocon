@@ -61,6 +61,29 @@ val effective = Hocon.load(base, fr, userOverrides)
 Objects merge recursively; arrays and scalars replace. A `null` in the override shadows (unsets)
 the fallback value at that key.
 
+### Substitutions
+
+`${path}` references another value in the same document; `${?path}` is optional and disappears when
+nothing is found. Substitutions resolve against the merged root, so they are order-independent.
+
+```scala
+val config = Hocon.parse("""
+  host    = localhost
+  url     = ${host}              # → "localhost"
+  service = ${defaults}          # copies the whole object
+  defaults { timeout = 30 }
+""")
+
+// A missing required substitution throws; an optional one is simply absent:
+Hocon.parse("x = ${?missing}").hasPath("x")   // false
+
+// Fall back to the environment for anything not in the config:
+Hocon.parse("home = ${HOME}", EnvSource.fromMap(sys.env))
+```
+
+Circular references throw `CircularReferenceException`. Mixing a substitution with surrounding text
+(`a ${b} c`) is value concatenation, which is Phase 4.
+
 A note on quoting: HOCON allows unquoted strings, but forbids the characters
 `$ " { } [ ] : = , + # ` ^ ? ! @ * &` and `\` inside them. Most UI strings (`Hello, world`,
 `Are you sure?`, `{count} items`) hit one of these, so **quote your translation strings**. This is
@@ -89,7 +112,7 @@ hocon fills.
 |------:|-------|:------:|
 | **1** | Lexer + parser → untyped `Config` (comments, quoted/unquoted strings, nested objects, path-expression keys, arrays). **i18n-usable.** | ✅ |
 | **2** | Object merging + `withFallback` (base locale + overrides). | ✅ |
-| **3** | Substitutions: `${path}`, `${?path}`, env fallback, cycle detection. | |
+| **3** | Substitutions: `${path}`, `${?path}`, env fallback, cycle detection. | ✅ |
 | **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | |
 | **5** | `include` directives behind a pluggable, per-platform IO source. | |
 | **6** | Typed decoder with case-class derivation (`config.as[A]`). | |

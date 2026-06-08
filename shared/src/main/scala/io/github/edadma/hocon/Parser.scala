@@ -32,8 +32,10 @@ final class Parser(tokens: Vector[Tok]):
   private def skipWs(): Unit         = while isWs do idx += 1
   private def skipSeparators(): Unit = while isWs || tk == Newline || tk == Comma do idx += 1
 
-  /** Parse the whole input into a `Config`. */
-  def parse(): Config =
+  /** Parse the whole input into an unresolved root object — substitution nodes are left in place for
+    * the resolver to eliminate.
+    */
+  def parseRoot(): ConfigObject =
     skipSeparators()
     val rootObj =
       if tk == LBrace then
@@ -45,7 +47,7 @@ final class Parser(tokens: Vector[Tok]):
       else parseObjectBody(braced = false)
     skipSeparators()
     if tk != EOF then error("unexpected token after configuration")
-    Config(rootObj)
+    rootObj
 
   private def parseObjectBody(braced: Boolean): ConfigObject =
     var fields: Map[String, ConfigValue] = ListMap.empty
@@ -117,6 +119,10 @@ final class Parser(tokens: Vector[Tok]):
     case Whitespace(_) => true
     case _             => false
 
+  private def isSubstTok(t: Token): Boolean = t match
+    case Subst(_, _) => true
+    case _           => false
+
   /** Collect a scalar value's tokens up to the next terminator, then classify the trimmed text. A
     * lone quoted string keeps its exact contents; anything else is trimmed and read as
     * true/false/null, a number, or an unquoted string.
@@ -130,8 +136,11 @@ final class Parser(tokens: Vector[Tok]):
         case other => collected += other; idx += 1
     val trimmed = collected.dropWhile(isWsTok).toList.reverse.dropWhile(isWsTok).reverse
     trimmed match
-      case Quoted(v) :: Nil => ConfigString(v)
+      case Subst(p, opt) :: Nil => ConfigSubstitution(p, opt)
+      case Quoted(v) :: Nil     => ConfigString(v)
       case _ =>
+        if trimmed.exists(isSubstTok) then
+          error("value concatenation with substitutions is not yet supported")
         val raw = trimmed.map {
           case Unquoted(t)   => t
           case Whitespace(w) => w

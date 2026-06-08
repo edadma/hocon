@@ -49,3 +49,14 @@ final case class ConfigNumber(raw: String) extends ConfigValue
 final case class ConfigBoolean(value: Boolean) extends ConfigValue
 
 case object ConfigNull extends ConfigValue
+
+/** An unresolved `${path}` reference. These exist only in the tree between parsing and resolution —
+  * the resolver replaces every one, so a value tree returned from `Hocon.parse` never contains one.
+  * `optional` marks the `${?path}` form, which disappears instead of erroring when nothing is found.
+  */
+final case class ConfigSubstitution(path: String, optional: Boolean) extends ConfigValue
+
+/** Internal sentinel for an optional substitution that resolved to nothing: the resolver drops the
+  * field or array element that holds it. Never escapes resolution.
+  */
+private[hocon] case object ResolveMissing extends ConfigValue

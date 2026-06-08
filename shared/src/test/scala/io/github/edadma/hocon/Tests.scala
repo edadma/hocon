@@ -243,6 +243,90 @@ class Tests extends AnyFreeSpec with Matchers:
     }
   }
 
+  "substitutions" - {
+    "a whole-value substitution resolves against the root" in {
+      val c = Hocon.parse("""
+        host = localhost
+        url  = ${host}
+      """)
+      c.getString("url") shouldBe "localhost"
+    }
+
+    "substitutions are order-independent (forward references work)" in {
+      val c = Hocon.parse("""
+        url  = ${host}
+        host = localhost
+      """)
+      c.getString("url") shouldBe "localhost"
+    }
+
+    "a substitution can point into a nested path" in {
+      val c = Hocon.parse("""
+        server { host = example.com }
+        primary = ${server.host}
+      """)
+      c.getString("primary") shouldBe "example.com"
+    }
+
+    "substitution chains resolve transitively" in {
+      val c = Hocon.parse("""
+        a = ${b}
+        b = ${c}
+        c = deep
+      """)
+      c.getString("a") shouldBe "deep"
+    }
+
+    "a substitution can copy an object subtree" in {
+      val c = Hocon.parse("""
+        defaults { timeout = 30, retries = 3 }
+        service  = ${defaults}
+      """)
+      c.getInt("service.timeout") shouldBe 30
+      c.getInt("service.retries") shouldBe 3
+    }
+
+    "a required substitution that is missing throws" in {
+      an[UnresolvedSubstitutionException] should be thrownBy Hocon.parse("x = ${nope}")
+    }
+
+    "an optional substitution that is missing drops the field" in {
+      val c = Hocon.parse("""
+        a = 1
+        b = ${?nope}
+      """)
+      c.getInt("a") shouldBe 1
+      c.hasPath("b") shouldBe false
+    }
+
+    "a circular reference throws" in {
+      a[CircularReferenceException] should be thrownBy Hocon.parse("""
+        a = ${b}
+        b = ${a}
+      """)
+    }
+
+    "a self reference with no prior value is circular" in {
+      a[CircularReferenceException] should be thrownBy Hocon.parse("a = ${a}")
+    }
+
+    "a missing substitution falls back to the environment" in {
+      val env = EnvSource.fromMap(Map("HOME" -> "/home/ada"))
+      val c   = Hocon.parse("home = ${HOME}", env)
+      c.getString("home") shouldBe "/home/ada"
+    }
+
+    "config values win over the environment" in {
+      val env = EnvSource.fromMap(Map("host" -> "from-env"))
+      val c   = Hocon.parse("host = from-config\nx = ${host}", env)
+      c.getString("x") shouldBe "from-config"
+    }
+
+    "mixing a substitution with other text is rejected (deferred to a later phase)" in {
+      a[ParseError] should be thrownBy Hocon.parse("greeting = hello ${name}")
+    }
+  }
+
   "i18n usage" - {
     "a realistic translation file parses" in {
       val c = Hocon.parse("""

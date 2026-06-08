@@ -59,10 +59,12 @@ messages("farewell")   // "Goodbye"  (from the base locale)
   `getConfig`, `getList`, …) with `*Opt` variants, `hasPath`, and clear exceptions.
 - **Object merging and fallback** — `withFallback` and `Hocon.load`, with recursive object
   merge and last-wins layering.
+- **Substitutions** — `${path}` and optional `${?path}`, resolved against the merged root,
+  with environment fallback and cycle detection.
 - **An i18n sidecar** — `Messages` with placeholder interpolation.
 
-Substitutions (`${path}`), value concatenation, durations and sizes, `include` directives,
-and a typed case-class decoder are on the [roadmap](/guide/roadmap/).
+Value concatenation, durations and sizes, `include` directives, and a typed case-class
+decoder are on the [roadmap](/guide/roadmap/).
 
 ## Where to go next
 

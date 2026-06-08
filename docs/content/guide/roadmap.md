@@ -1,6 +1,6 @@
 ---
 title: "Roadmap"
-weight: 3
+weight: 4
 ---
 
 hocon is built in phases, smallest-useful-thing first. The goal of the early phases is a
@@ -12,7 +12,7 @@ eventual oracle.
 |------:|-------|:------:|
 | **1** | Lexer + parser → untyped `Config` (comments, quoted/unquoted strings, nested objects, path-expression keys, arrays). | ✅ Done |
 | **2** | Object merging + `withFallback` (base locale + overrides). | ✅ Done |
-| **3** | Substitutions: `${path}`, `${?path}`, environment fallback, cycle detection. | Planned |
+| **3** | Substitutions: `${path}`, `${?path}`, environment fallback, cycle detection. | ✅ Done |
 | **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | Planned |
 | **5** | `include` directives behind a pluggable, per-platform IO source. | Planned |
 | **6** | Typed decoder with case-class derivation (`config.as[A]`). | Planned |
