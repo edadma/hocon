@@ -16,6 +16,8 @@ imports and no regex engine in its core — so the same parser runs on the **JVM
 browser/Node.js via **Scala.js**, and as a native binary via **Scala Native**. The identical test
 suite runs on all three (`sbt test`).
 
+📖 **Full documentation: [hocon.edadma.dev](https://hocon.edadma.dev/)**
+
 > **Status:** All seven roadmap phases complete — the lexer, parser, untyped `Config` API, object
 > merging, substitutions, value concatenation, durations/sizes, `include` directives, a typed
 > (case-class) decoder, and HOCON-spec conformance (path expressions, `+=` append, self-referential
@@ -214,6 +216,14 @@ hocon fills.
 | **5** | `include` directives behind a pluggable, per-platform IO source. | ✅ |
 | **6** | Typed decoder with case-class derivation (`config.as[A]`). | ✅ |
 | **7** | HOCON-spec conformance: path expressions, `+=` append, self-referential substitutions. | ✅ |
+
+## Documentation
+
+The full documentation site is at **[hocon.edadma.dev](https://hocon.edadma.dev/)**:
+
+- [Getting Started](https://hocon.edadma.dev/getting-started/) — add the dependency and parse your first config
+- [Guide](https://hocon.edadma.dev/guide/) — the HOCON format, merging, substitutions, includes, typed decoding, and the roadmap
+- [Reference](https://hocon.edadma.dev/reference/) — the `Config` API and the `Messages` i18n helper
 
 ## Building and Testing
 
