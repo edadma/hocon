@@ -1,33 +1,31 @@
 package io.github.edadma.hocon
 
-import java.nio.file.Files
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
-/** JVM-only tests for the real platform IO seam — the actual filesystem [[ConfigSource.default]] and
-  * the live [[EnvSource.system]]. The include *logic* (merging, required, nesting, cycles) is proven
-  * platform-independently in the shared suite via `ConfigSource.fromMap`; these cover the thin JVM
-  * adapter that backs it with `java.nio` and `System.getenv`.
+/** JVM-only tests for the include mechanisms that exist only on the JVM — classpath resources and
+  * URLs. Filesystem and environment IO are exercised on every platform by the shared [[PlatformTests]];
+  * these cover the `classpath(...)`/`url(...)` qualifiers that Scala.js and Scala Native cannot serve.
   */
-class PlatformTests extends AnyFreeSpec with Matchers:
+class JvmPlatformTests extends AnyFreeSpec with Matchers:
 
-  "the default source reads an include from the filesystem" in {
-    val file = Files.createTempFile("hocon-include", ".conf")
-    try
-      Files.writeString(file, """greeting = "hi from a file"""")
-      val c = Hocon.parse(s"""include "${file.toAbsolutePath}"""", ConfigSource.default)
-      c.getString("greeting") shouldBe "hi from a file"
-    finally Files.deleteIfExists(file)
+  "the default source loads a classpath include" in {
+    val c = Hocon.parse(
+      """include classpath("hocon-classpath-test.conf")""",
+      ConfigSource.default,
+    )
+    c.getString("from-classpath") shouldBe "loaded via classpath"
   }
 
-  "a required filesystem include that is absent throws" in {
+  "the bare include form finds a classpath resource heuristically" in {
+    val c = Hocon.parse(
+      """include "hocon-classpath-test.conf"""",
+      ConfigSource.default,
+    )
+    c.getString("from-classpath") shouldBe "loaded via classpath"
+  }
+
+  "a required classpath include that is absent throws" in {
     a[IncludeException] should be thrownBy
-      Hocon.parse("""include required("/no/such/hocon/file.conf")""", ConfigSource.default)
-  }
-
-  "the system env source backs substitutions" in {
-    Option(System.getenv("HOME")).foreach { home =>
-      val c = Hocon.parse("home = ${HOME}", EnvSource.system)
-      c.getString("home") shouldBe home
-    }
+      Hocon.parse("""include required(classpath("no-such-resource.conf"))""", ConfigSource.default)
   }
