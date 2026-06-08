@@ -42,6 +42,25 @@ val msg = Messages(config.getConfig("en"))
 msg("cart.items", "count" -> 3)   // "3 items"
 ```
 
+### Merging and fallback
+
+A partial config falls back to a base — perfect for a base locale with per-locale overrides:
+
+```scala
+val base = Hocon.parse("""greeting = "Hello", farewell = "Goodbye"""")
+val fr   = Hocon.parse("""greeting = "Bonjour"""")
+
+val messages = Messages(fr.withFallback(base))
+messages("greeting")   // "Bonjour"  (translated)
+messages("farewell")   // "Goodbye"  (from base)
+
+// Merge several layers; later arguments win:
+val effective = Hocon.load(base, fr, userOverrides)
+```
+
+Objects merge recursively; arrays and scalars replace. A `null` in the override shadows (unsets)
+the fallback value at that key.
+
 A note on quoting: HOCON allows unquoted strings, but forbids the characters
 `$ " { } [ ] : = , + # ` ^ ? ! @ * &` and `\` inside them. Most UI strings (`Hello, world`,
 `Are you sure?`, `{count} items`) hit one of these, so **quote your translation strings**. This is
@@ -69,7 +88,7 @@ hocon fills.
 | Phase | Scope | Status |
 |------:|-------|:------:|
 | **1** | Lexer + parser → untyped `Config` (comments, quoted/unquoted strings, nested objects, path-expression keys, arrays). **i18n-usable.** | ✅ |
-| **2** | Object merging + `withFallback` (base locale + overrides). | |
+| **2** | Object merging + `withFallback` (base locale + overrides). | ✅ |
 | **3** | Substitutions: `${path}`, `${?path}`, env fallback, cycle detection. | |
 | **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | |
 | **5** | `include` directives behind a pluggable, per-platform IO source. | |

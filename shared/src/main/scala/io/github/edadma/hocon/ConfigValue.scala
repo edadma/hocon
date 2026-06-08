@@ -16,8 +16,26 @@ sealed trait ConfigValue
 final case class ConfigObject(fields: Map[String, ConfigValue]) extends ConfigValue:
   def get(key: String): Option[ConfigValue] = fields.get(key)
 
+  /** This object overriding `fallback`: `this` wins, `fallback` supplies defaults for keys this
+    * object lacks. Objects present on both sides merge recursively.
+    */
+  def withFallback(fallback: ConfigObject): ConfigObject = ConfigObject.deepMerge(fallback, this)
+
 object ConfigObject:
   val empty: ConfigObject = ConfigObject(ListMap.empty)
+
+  /** Deep-merge two objects with `over` winning. Keys present on both sides merge recursively when
+    * both values are objects; otherwise `over`'s value replaces — arrays and scalars never combine.
+    * A `null` in `over` replaces as well, which (because [[Config.hasPath]] treats null as absent)
+    * shadows, effectively unsetting, the fallback's value at that key.
+    */
+  def deepMerge(base: ConfigObject, over: ConfigObject): ConfigObject =
+    var result = base.fields
+    for (k, v) <- over.fields do
+      result = (result.get(k), v) match
+        case (Some(o: ConfigObject), n: ConfigObject) => result.updated(k, deepMerge(o, n))
+        case _                                        => result.updated(k, v)
+    ConfigObject(result)
 
 final case class ConfigArray(elements: List[ConfigValue]) extends ConfigValue
 

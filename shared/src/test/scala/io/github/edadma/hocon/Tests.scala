@@ -196,6 +196,53 @@ class Tests extends AnyFreeSpec with Matchers:
     }
   }
 
+  "merging and fallback" - {
+    "withFallback fills missing keys and lets this config win" in {
+      val base     = Hocon.parse("a = 1\nb = base")
+      val override_ = Hocon.parse("b = over\nc = 3")
+      val merged   = override_.withFallback(base)
+      merged.getInt("a") shouldBe 1       // only in base
+      merged.getString("b") shouldBe "over" // this config wins
+      merged.getInt("c") shouldBe 3       // only in this config
+    }
+
+    "objects merge recursively, scalars and arrays replace" in {
+      val base = Hocon.parse("""
+        server { host = localhost, port = 80, tags = [a, b] }
+      """)
+      val over = Hocon.parse("""
+        server { port = 9000, tags = [c] }
+      """)
+      val merged = over.withFallback(base)
+      merged.getString("server.host") shouldBe "localhost" // kept from base
+      merged.getInt("server.port") shouldBe 9000           // overridden
+      merged.getStringList("server.tags") shouldBe List("c") // arrays replace, not concat
+    }
+
+    "null in the override shadows (unsets) the fallback value" in {
+      val base   = Hocon.parse("a = present")
+      val over   = Hocon.parse("a = null")
+      val merged = over.withFallback(base)
+      merged.hasPath("a") shouldBe false
+      a[MissingPathException] should be thrownBy merged.getString("a")
+    }
+
+    "Hocon.load merges in order with later winning" in {
+      val merged = Hocon.load(
+        Hocon.parse("a = 1\nb = 1\nc = 1"),
+        Hocon.parse("b = 2\nc = 2"),
+        Hocon.parse("c = 3"),
+      )
+      merged.getInt("a") shouldBe 1
+      merged.getInt("b") shouldBe 2
+      merged.getInt("c") shouldBe 3
+    }
+
+    "Hocon.load with no arguments is the empty config" in {
+      Hocon.load().hasPath("anything") shouldBe false
+    }
+  }
+
   "i18n usage" - {
     "a realistic translation file parses" in {
       val c = Hocon.parse("""
@@ -225,5 +272,22 @@ class Tests extends AnyFreeSpec with Matchers:
     "Messages leaves unknown placeholders intact" in {
       val c = Hocon.parse("""msg = "hi {name}"""")
       Messages(c)("msg", "other" -> 1) shouldBe "hi {name}"
+    }
+
+    "a partial locale falls back to the base locale" in {
+      val base = Hocon.parse("""
+        greeting = "Hello"
+        farewell = "Goodbye"
+        nav { home = "Home", about = "About" }
+      """)
+      val frFR = Hocon.parse("""
+        greeting = "Bonjour"
+        nav { home = "Accueil" }
+      """)
+      val m = Messages(frFR.withFallback(base))
+      m("greeting") shouldBe "Bonjour"   // translated
+      m("farewell") shouldBe "Goodbye"   // falls back to base
+      m("nav.home") shouldBe "Accueil"   // translated
+      m("nav.about") shouldBe "About"    // falls back to base
     }
   }

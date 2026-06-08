@@ -159,7 +159,7 @@ final class Parser(tokens: Vector[Tok]):
       case Nil => fields
       case key :: Nil =>
         val merged = (fields.get(key), value) match
-          case (Some(o: ConfigObject), n: ConfigObject) => deepMerge(o, n)
+          case (Some(o: ConfigObject), n: ConfigObject) => ConfigObject.deepMerge(o, n)
           case _                                        => value
         fields.updated(key, merged)
       case key :: rest =>
@@ -167,11 +167,3 @@ final class Parser(tokens: Vector[Tok]):
           case Some(o: ConfigObject) => o
           case _                     => ConfigObject.empty
         fields.updated(key, ConfigObject(insert(child.fields, rest, value)))
-
-  private def deepMerge(base: ConfigObject, over: ConfigObject): ConfigObject =
-    var result = base.fields
-    for (k, v) <- over.fields do
-      result = (result.get(k), v) match
-        case (Some(o: ConfigObject), n: ConfigObject) => result.updated(k, deepMerge(o, n))
-        case _                                        => result.updated(k, v)
-    ConfigObject(result)

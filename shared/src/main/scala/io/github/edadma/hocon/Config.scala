@@ -87,6 +87,18 @@ final case class Config(root: ConfigObject):
   def getListOpt(path: String): Option[List[ConfigValue]] =
     if hasPath(path) then Some(getList(path)) else None
 
-/** Entry point: parse HOCON source text into a [[Config]]. */
+  /** This config overriding `fallback`: values here win, `fallback` fills in keys this config lacks.
+    * Objects present in both merge recursively; arrays and scalars from this config replace.
+    */
+  def withFallback(fallback: Config): Config = Config(root.withFallback(fallback.root))
+
+/** Entry point: parse and combine HOCON documents. */
 object Hocon:
   def parse(input: String): Config = Parser(Lexer(input).tokenize()).parse()
+
+  /** Merge configs so that later arguments win over earlier ones — i.e. pass the base first and the
+    * most specific overrides last. With no arguments this is the empty config.
+    */
+  def load(configs: Config*): Config =
+    if configs.isEmpty then Config(ConfigObject.empty)
+    else configs.reduceLeft((base, over) => over.withFallback(base))
