@@ -557,6 +557,84 @@ class Tests extends AnyFreeSpec with Matchers:
     }
   }
 
+  "typed decoder" - {
+    "decodes a flat case class" in {
+      val c = Hocon.parse("""
+        host = localhost
+        port = 8080
+        debug = true
+      """)
+      c.as[Server] shouldBe Server("localhost", 8080, true)
+    }
+
+    "decodes nested case classes" in {
+      val c = Hocon.parse("""
+        name = demo
+        server { host = localhost, port = 9000, debug = false }
+      """)
+      c.as[App] shouldBe App("demo", Server("localhost", 9000, false))
+    }
+
+    "decodes the value at a path with getAs" in {
+      val c = Hocon.parse("""server { host = h, port = 1, debug = on }""")
+      c.getAs[Server]("server") shouldBe Server("h", 1, true)
+    }
+
+    "reads an Option field as Some when present" in {
+      val c = Hocon.parse("""name = x, note = "hi"""")
+      c.as[Noted] shouldBe Noted("x", Some("hi"))
+    }
+
+    "reads an Option field as None when absent" in {
+      val c = Hocon.parse("""name = x""")
+      c.as[Noted] shouldBe Noted("x", None)
+    }
+
+    "reads an Option field as None when explicitly null" in {
+      val c = Hocon.parse("""name = x, note = null""")
+      c.as[Noted] shouldBe Noted("x", None)
+    }
+
+    "decodes a List field" in {
+      val c = Hocon.parse("""name = x, tags = [a, b, c]""")
+      c.as[Tagged] shouldBe Tagged("x", List("a", "b", "c"))
+    }
+
+    "decodes a Map field keeping key order" in {
+      val c = Hocon.parse("""limits { a = 1, b = 2, c = 3 }""")
+      c.getAs[Map[String, Int]]("limits").toList shouldBe List("a" -> 1, "b" -> 2, "c" -> 3)
+    }
+
+    "decodes a duration field" in {
+      val c = Hocon.parse("""timeout = 10s""")
+      import scala.concurrent.duration.*
+      c.as[Timed] shouldBe Timed(10.seconds)
+    }
+
+    "throws MissingPathException for a missing required field, with its path" in {
+      val c = Hocon.parse("""host = localhost, port = 1""")
+      val e = intercept[MissingPathException](c.as[Server])
+      e.path shouldBe "debug"
+    }
+
+    "throws WrongTypeException for a wrongly-typed field, with its path" in {
+      val c = Hocon.parse("""host = localhost, port = "nope", debug = true""")
+      val e = intercept[WrongTypeException](c.as[Server])
+      e.path shouldBe "port"
+    }
+
+    "reports a nested field path on failure" in {
+      val c = Hocon.parse("""name = demo, server { host = h, port = bad, debug = false }""")
+      val e = intercept[WrongTypeException](c.as[App])
+      e.path shouldBe "server.port"
+    }
+
+    "throws WrongTypeException decoding a non-object as a case class" in {
+      val c = Hocon.parse("""server = "not an object"""")
+      intercept[WrongTypeException](c.getAs[Server]("server"))
+    }
+  }
+
   "i18n usage" - {
     "a realistic translation file parses" in {
       val c = Hocon.parse("""
@@ -605,3 +683,10 @@ class Tests extends AnyFreeSpec with Matchers:
       m("nav.about") shouldBe "About"    // falls back to base
     }
   }
+
+// Case classes for the typed-decoder tests live at the top level so their Mirrors derive cleanly.
+case class Server(host: String, port: Int, debug: Boolean)
+case class App(name: String, server: Server)
+case class Noted(name: String, note: Option[String])
+case class Tagged(name: String, tags: List[String])
+case class Timed(timeout: scala.concurrent.duration.FiniteDuration)

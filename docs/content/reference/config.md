@@ -121,6 +121,31 @@ See the [merging guide](/guide/merging/) for the full semantics.
 
 `Config.root` exposes the top-level `ConfigObject` directly.
 
+## Typed decoding
+
+Map a config onto a case class instead of reading fields one at a time. A `Decoder[A]` is
+derived automatically for any case class — and case classes nested inside it — from its
+`Mirror`, so there is nothing to write but the class.
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `as[A]` | `A` | Decode the whole config into `A`, mapping each field to the top-level key of the same name. |
+| `getAs[A](path)` | `A` | Decode the value at `path` into `A`. |
+
+```scala
+case class Server(host: String, port: Int, debug: Boolean)
+
+val config = Hocon.parse("host = localhost, port = 8080, debug = true")
+config.as[Server]                  // Server("localhost", 8080, true)
+config.getAs[Server]("server")     // decode a nested object at a path
+```
+
+Field types supported out of the box: `String`, `Int`, `Long`, `Double`, `Boolean`,
+`FiniteDuration`, `Option[A]` (absent or `null` → `None`), `List[A]`, `Map[String, A]`,
+`Config`, the raw `ConfigValue`, and nested case classes. A missing required field throws
+`MissingPathException` and a wrongly-typed one throws `WrongTypeException`, each carrying the
+dotted field path. See the [decoding guide](/guide/decoding/) for the full story.
+
 ## Exceptions
 
 All errors extend `HoconException`:

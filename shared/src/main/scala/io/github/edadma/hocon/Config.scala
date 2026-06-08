@@ -26,17 +26,7 @@ final case class Config(root: ConfigObject):
     case None | Some(ConfigNull) => throw MissingPathException(path)
     case Some(v)                 => v
 
-  private def typeName(v: ConfigValue): String = v match
-    case _: ConfigObject       => "object"
-    case _: ConfigArray        => "list"
-    case _: ConfigString       => "string"
-    case _: ConfigNumber       => "number"
-    case _: ConfigBoolean      => "boolean"
-    case ConfigNull            => "null"
-    case _: ConfigSubstitution => "substitution"
-    case _: ConfigConcat       => "concatenation"
-    case _: ConfigWhitespace   => "whitespace"
-    case ResolveMissing        => "missing"
+  private def typeName(v: ConfigValue): String = ConfigValue.typeName(v)
 
   def getString(path: String): String = requirePath(path) match
     case ConfigString(s)  => s
@@ -91,6 +81,19 @@ final case class Config(root: ConfigObject):
     case other           => throw WrongTypeException(path, expected, typeName(other))
 
   def getValue(path: String): ConfigValue = requirePath(path)
+
+  /** Decode this whole config into a typed value `A` — typically a case class whose field names match
+    * the top-level keys. A `Decoder[A]` for any case class (and nested case classes) is derived
+    * automatically; the primitive field types `String`, `Int`, `Long`, `Double`, `Boolean`,
+    * `FiniteDuration`, `Option[_]`, `List[_]`, and `Map[String, _]` are supported out of the box.
+    * Throws [[MissingPathException]] for an absent required field and [[WrongTypeException]] when a
+    * value is the wrong shape; both carry the dotted field path for context.
+    */
+  def as[A](using d: Decoder[A]): A = d.decode(root, "")
+
+  /** Decode the value at `path` into a typed value `A`, the same way [[as]] decodes the whole config.
+    */
+  def getAs[A](path: String)(using d: Decoder[A]): A = d.decode(requirePath(path), path)
 
   def getList(path: String): List[ConfigValue] = requirePath(path) match
     case ConfigArray(es) => es

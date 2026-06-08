@@ -10,6 +10,20 @@ import scala.collection.immutable.ListMap
   */
 sealed trait ConfigValue
 
+object ConfigValue:
+  /** A short, human-readable name for a value's kind, used in error messages. */
+  private[hocon] def typeName(v: ConfigValue): String = v match
+    case _: ConfigObject       => "object"
+    case _: ConfigArray        => "list"
+    case _: ConfigString       => "string"
+    case _: ConfigNumber       => "number"
+    case _: ConfigBoolean      => "boolean"
+    case ConfigNull            => "null"
+    case _: ConfigSubstitution => "substitution"
+    case _: ConfigConcat       => "concatenation"
+    case _: ConfigWhitespace   => "whitespace"
+    case ResolveMissing        => "missing"
+
 /** An object: an ordered map from key to value. Order is preserved (insertion order) so that
   * rendering and tests are deterministic; lookups are by key regardless of order.
   */

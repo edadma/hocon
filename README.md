@@ -15,9 +15,10 @@ Unlike `com.typesafe:config`, which is JVM-only, **hocon** is written in pure Sc
 `java.*` dependencies in its core, so the same parser runs on the **JVM**, in the browser/Node.js
 via **Scala.js**, and as a native binary via **Scala Native**.
 
-> **Status:** Phases 1–5 complete — the lexer, parser, untyped `Config` API, object merging,
-> substitutions, value concatenation, durations/sizes, and `include` directives are in and tested on
-> all three platforms. A typed (case-class) decoder follows. See the roadmap below.
+> **Status:** Phases 1–6 complete — the lexer, parser, untyped `Config` API, object merging,
+> substitutions, value concatenation, durations/sizes, `include` directives, and a typed
+> (case-class) decoder are in and tested on all three platforms. Only conformance against the
+> reference test corpus remains. See the roadmap below.
 
 ## Usage
 
@@ -139,6 +140,35 @@ A note on quoting: HOCON allows unquoted strings, but forbids the characters
 `Are you sure?`, `{count} items`) hit one of these, so **quote your translation strings**. This is
 spec-correct HOCON, not a limitation of this library.
 
+### Typed decoding
+
+Map a whole document onto a case class with `config.as[A]`. A decoder is derived from the case
+class at compile time (pure `Mirror` work, so it runs the same on all three platforms), reading
+each field from the object key of the same name and recursing into nested case classes:
+
+```scala
+import io.github.edadma.hocon.*
+import scala.concurrent.duration.*
+
+case class Server(host: String, port: Int, debug: Boolean)
+case class App(name: String, server: Server, tags: List[String], timeout: FiniteDuration)
+
+val config = Hocon.parse("""
+  name = demo
+  server { host = localhost, port = 8080, debug = true }
+  tags    = [http, public]
+  timeout = 30s
+""")
+
+config.as[App]
+// App("demo", Server("localhost", 8080, true), List("http", "public"), 30.seconds)
+```
+
+`String`, `Int`/`Long`/`Double`, `Boolean`, `FiniteDuration`, `Option` (absent or `null` →
+`None`), `List`, `Map[String, _]`, `Config`, and nested case classes are supported. Failures
+throw `MissingPathException` / `WrongTypeException` carrying the dotted field path. Use
+`config.getAs[A](path)` to decode a value that isn't at the root.
+
 ## Why
 
 HOCON is a comfortable format for configuration and, in particular, for **internationalization
@@ -165,7 +195,7 @@ hocon fills.
 | **3** | Substitutions: `${path}`, `${?path}`, env fallback, cycle detection. | ✅ |
 | **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | ✅ |
 | **5** | `include` directives behind a pluggable, per-platform IO source. | ✅ |
-| **6** | Typed decoder with case-class derivation (`config.as[A]`). | |
+| **6** | Typed decoder with case-class derivation (`config.as[A]`). | ✅ |
 | **7** | Conformance against the Typesafe spec's test corpus. | |
 
 ## Building and Testing
