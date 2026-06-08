@@ -7,10 +7,11 @@ hocon is a pure-Scala library with no native dependencies, so there is nothing t
 the system level — just add it to your build.
 
 [= note =]
-hocon is under active development. The parser, the untyped `Config` API, object merging,
-substitutions, value concatenation, durations/sizes, `include` directives, and the
-`config.as[A]` typed decoder are in place and tested on all three platforms; only conformance
-against the reference test corpus remains on the [roadmap](/guide/roadmap/).
+Every [roadmap](/guide/roadmap/) phase is complete: the parser, the untyped `Config` API, object
+merging, substitutions, value concatenation, durations/sizes, `include` directives, the
+`config.as[A]` typed decoder, and HOCON-spec conformance (path expressions, `+=` append,
+self-referential substitutions) are all in place and tested identically on the JVM, Scala.js, and
+Scala Native.
 [= /note =]
 
 ## Requirements
@@ -27,7 +28,7 @@ hocon cross-publishes for the JVM, Scala.js, and Scala Native. Use the `%%%` ope
 picks the right artifact for each platform:
 
 ```scala
-libraryDependencies += "io.github.edadma" %%% "hocon" % "0.0.1"
+libraryDependencies += "io.github.edadma" %%% "hocon" % "0.1.0"
 ```
 
 In a `crossProject` build the single line covers every target:
@@ -35,7 +36,7 @@ In a `crossProject` build the single line covers every target:
 ```scala
 lazy val app = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(
-    libraryDependencies += "io.github.edadma" %%% "hocon" % "0.0.1",
+    libraryDependencies += "io.github.edadma" %%% "hocon" % "0.1.0",
   )
 ```
 

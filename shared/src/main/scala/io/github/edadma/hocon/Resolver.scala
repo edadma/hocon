@@ -27,6 +27,7 @@ object Resolver:
     v match
       case ConfigSubstitution(path, optional) => resolveSubstitution(path, optional, root, env, stack)
       case ConfigConcat(parts)                => resolveConcat(parts, root, env, stack)
+      case ConfigSelfAppend(elem)             => resolveValue(ConfigArray(List(elem)), root, env, stack)
       case ConfigObject(fields) =>
         val resolved = fields.iterator
           .flatMap { (k, vv) =>
@@ -107,4 +108,26 @@ object Resolver:
         cv match
           case o: ConfigObject => o.fields.get(k).flatMap(go(_, rest))
           case _               => None
-    go(root, path.split("\\.").toList)
+    go(root, splitPath(path))
+
+  /** Split a substitution path expression into elements. An unquoted `.` separates elements; a `.`
+    * inside a quoted segment is literal, so `${foo."bar.baz"}` looks up `foo` then the single key
+    * `bar.baz`. Surrounding whitespace on an unquoted element is trimmed.
+    */
+  private def splitPath(path: String): List[String] =
+    val segs = scala.collection.mutable.ListBuffer.empty[String]
+    val cur  = StringBuilder()
+    var inQuote = false
+    var i       = 0
+    while i < path.length do
+      val c = path.charAt(i)
+      if inQuote then
+        if c == '"' then inQuote = false else cur += c
+      else
+        c match
+          case '"' => inQuote = true
+          case '.' => segs += cur.toString.trim; cur.clear()
+          case _   => cur += c
+      i += 1
+    segs += cur.toString.trim
+    segs.toList

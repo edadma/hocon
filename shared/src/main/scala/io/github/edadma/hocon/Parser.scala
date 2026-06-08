@@ -76,9 +76,7 @@ final class Parser(
           if isIncludeDirective then
             val included = parseInclude()
             fields = ConfigObject.deepMerge(ConfigObject(fields), included).fields
-          else
-            val (path, value) = parseEntry()
-            fields = insert(fields, path, value)
+          else fields = parseField(fields)
     ConfigObject(fields)
 
   /** `include` is a directive only when it is followed by a quoted resource name or one of the
@@ -158,29 +156,107 @@ final class Parser(
         if required then throw IncludeException(s"required include not found: $spec")
         else ConfigObject.empty
 
-  private def parseEntry(): (List[String], ConfigValue) =
-    val path = parseKey()
+  /** Parse one field — `key = value`, `key : value`, `key { … }`, or `key += value` — and fold it
+    * into `fields`. The `+=` form appends to the array already at `key` (or starts a fresh array when
+    * the key is absent), which is HOCON's self-referential-array shorthand for `key = ${?key} [value]`.
+    */
+  private def parseField(fields: Map[String, ConfigValue]): Map[String, ConfigValue] =
+    val path = parsePath()
     skipWs()
     tk match
       case Colon | Equals =>
         idx += 1
-        (path, parseValue())
+        insert(fields, path, spliceSelfRef(fields, path, parseValue()))
       case LBrace =>
-        (path, parseValue()) // object value with no separator
-      case _ => error("expected '=', ':', or '{' after key")
+        insert(fields, path, parseValue()) // object value with no separator
+      case PlusEquals =>
+        idx += 1
+        insert(fields, path, ConfigSelfAppend(parseValue()))
+      case _ => error("expected '=', ':', '+=', or '{' after key")
 
-  private def parseKey(): List[String] =
-    skipWs()
-    tk match
-      case Quoted(v) =>
-        idx += 1
-        List(v)
-      case Unquoted(t) =>
-        idx += 1
-        val parts = t.split("\\.", -1).toList
-        if parts.exists(_.isEmpty) then error(s"invalid key '$t'")
-        parts
-      case _ => error("expected a key")
+  /** Resolve a field's self-reference against its own previous value, HOCON's "look backward" rule:
+    * `a = ${a}` and `path = ${path} [x]` use the value `a`/`path` already held in this object body,
+    * rather than the not-yet-stored value being defined now (which would be an unbreakable cycle).
+    * A `${?self}` with no prior value disappears; a required `${self}` with no prior is left in place
+    * for the resolver to report as a cycle. The self-path is matched against this field's path within
+    * the current object body — a top-level field's path is its absolute path, so the common case is
+    * exact.
+    */
+  private def spliceSelfRef(
+      fields: Map[String, ConfigValue],
+      path: List[String],
+      value: ConfigValue,
+  ): ConfigValue =
+    val selfPath = path.mkString(".")
+    val prior    = lookupPath(fields, path)
+    def go(v: ConfigValue): ConfigValue = v match
+      case ConfigSubstitution(p, optional) if p == selfPath =>
+        prior match
+          case Some(pv)          => pv
+          case None if optional  => ResolveMissing
+          case None              => v
+      case ConfigConcat(parts) => ConfigConcat(parts.map(go))
+      case other               => other
+    go(value)
+
+  /** Parse a key as a HOCON path expression: a run of quoted and unquoted pieces in which an unquoted
+    * `.` separates path elements and a quoted segment's `.` is literal. `foo.bar` and `foo."bar.baz"`
+    * and `a b c` are all valid keys — the first nests two levels, the second is a two-element path
+    * whose second element literally contains a dot, the third is the single key `a b c`. Whitespace
+    * between pieces of one element is preserved; whitespace at an element's edges is discarded.
+    */
+  private def parsePath(): List[String] =
+    val segments = scala.collection.mutable.ListBuffer.empty[String]
+    val cur      = StringBuilder()
+    var hasText  = false  // whether the current element has any non-whitespace content yet
+    var pending  = ""     // whitespace seen since the last text, committed only if more text follows
+    var started  = false
+
+    def addText(s: String): Unit =
+      if hasText then cur ++= pending
+      pending = ""
+      cur ++= s
+      hasText = true
+
+    def endElement(): Unit =
+      segments += cur.toString
+      cur.clear()
+      hasText = false
+      pending = ""
+
+    skipWs() // leading whitespace before the key
+    var continue = true
+    while continue do
+      tk match
+        case Quoted(v) =>
+          idx += 1; started = true; addText(v)
+        case Whitespace(w) =>
+          idx += 1; if hasText then pending += w // edge whitespace is dropped, interior preserved
+        case Unquoted(t) =>
+          idx += 1; started = true
+          val parts = t.split("\\.", -1)
+          for (p, i) <- parts.zipWithIndex do
+            if i > 0 then endElement() // an unquoted '.' closes the current element
+            if p.nonEmpty then addText(p)
+        case _ => continue = false
+    if !started then error("expected a key")
+    endElement()
+    val result = segments.toList
+    if result.exists(_.isEmpty) then error(s"invalid key — empty path element in '${result.mkString(".")}'")
+    result
+
+  /** The value currently stored at `path` while a single object body is being built, used to resolve
+    * the `${?key}` an `+=` desugars to against the prior definition. Returns `None` if nothing is yet
+    * at `path` (or an intermediate segment is not an object).
+    */
+  private def lookupPath(fields: Map[String, ConfigValue], path: List[String]): Option[ConfigValue] =
+    path match
+      case Nil        => None
+      case key :: Nil => fields.get(key)
+      case key :: rest =>
+        fields.get(key) match
+          case Some(o: ConfigObject) => lookupPath(o.fields, rest)
+          case _                     => None
 
   /** Parse a value, which may be a whitespace-separated concatenation of pieces. Each piece is an
     * object, an array, a quoted/unquoted scalar, or a substitution; interior whitespace is captured
@@ -246,9 +322,13 @@ final class Parser(
     path match
       case Nil => fields
       case key :: Nil =>
-        val merged = (fields.get(key), value) match
-          case (Some(o: ConfigObject), n: ConfigObject) => ConfigObject.deepMerge(o, n)
-          case _                                        => value
+        val merged = value match
+          case ConfigSelfAppend(elem) => ConfigObject.appendInto(fields.get(key), elem)
+          case n: ConfigObject =>
+            fields.get(key) match
+              case Some(o: ConfigObject) => ConfigObject.deepMerge(o, n)
+              case _                     => n
+          case _ => value
         fields.updated(key, merged)
       case key :: rest =>
         val child = fields.get(key) match

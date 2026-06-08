@@ -68,9 +68,11 @@ messages("farewell")   // "Goodbye"  (from the base locale)
   pluggable, per-platform `ConfigSource`.
 - **A typed decoder** — `config.as[A]` maps a document onto a case class, with automatic
   `Mirror`-derived decoders for nested case classes, `Option`, `List`, and `Map`.
+- **Full path expressions and array append** — quoted path segments, `+=`, and
+  self-referential substitutions, conformant with the HOCON spec.
 - **An i18n sidecar** — `Messages` with placeholder interpolation.
 
-Conformance against the reference test corpus is the last item on the [roadmap](/guide/roadmap/).
+Every phase on the [roadmap](/guide/roadmap/) is complete.
 
 ## Where to go next
 

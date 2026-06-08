@@ -22,6 +22,7 @@ object ConfigValue:
     case _: ConfigSubstitution => "substitution"
     case _: ConfigConcat       => "concatenation"
     case _: ConfigWhitespace   => "whitespace"
+    case _: ConfigSelfAppend   => "self-append"
     case ResolveMissing        => "missing"
 
 /** An object: an ordered map from key to value. Order is preserved (insertion order) so that
@@ -46,10 +47,23 @@ object ConfigObject:
   def deepMerge(base: ConfigObject, over: ConfigObject): ConfigObject =
     var result = base.fields
     for (k, v) <- over.fields do
-      result = (result.get(k), v) match
-        case (Some(o: ConfigObject), n: ConfigObject) => result.updated(k, deepMerge(o, n))
-        case _                                        => result.updated(k, v)
+      result = v match
+        case ConfigSelfAppend(elem) => result.updated(k, appendInto(result.get(k), elem))
+        case n: ConfigObject =>
+          result.get(k) match
+            case Some(o: ConfigObject) => result.updated(k, deepMerge(o, n))
+            case _                     => result.updated(k, n)
+        case _ => result.updated(k, v)
     ConfigObject(result)
+
+  /** Fold an `+=` element into whatever value a key already holds. With a prior value the two form a
+    * value concatenation (the prior array followed by a one-element array), which the resolver
+    * collapses to the extended array; with no prior value yet the append stays deferred as a
+    * [[ConfigSelfAppend]] so that a later merge against an outer definition can still supply the base.
+    */
+  def appendInto(prior: Option[ConfigValue], elem: ConfigValue): ConfigValue = prior match
+    case None        => ConfigSelfAppend(elem)
+    case Some(value) => ConfigConcat(List(value, ConfigWhitespace(" "), ConfigArray(List(elem))))
 
 final case class ConfigArray(elements: List[ConfigValue]) extends ConfigValue
 
@@ -82,6 +96,13 @@ final case class ConfigConcat(parts: List[ConfigValue]) extends ConfigValue
   * string and ignored when it renders as an array or object. Appears only inside a concat's parts.
   */
 private[hocon] final case class ConfigWhitespace(ws: String) extends ConfigValue
+
+/** A deferred `+=` append whose base value is not yet known — `a += x` before any prior `a` is seen.
+  * Object merging folds it into a real concatenation as soon as a base appears (so an append in one
+  * `server { … }` block sees the array from another); a `ConfigSelfAppend` that survives all merging
+  * had no prior value anywhere, and the resolver finalizes it to the single-element array `[x]`.
+  */
+private[hocon] final case class ConfigSelfAppend(elem: ConfigValue) extends ConfigValue
 
 /** Internal sentinel for an optional substitution that resolved to nothing: the resolver drops the
   * field or array element that holds it. Never escapes resolution.

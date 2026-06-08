@@ -117,6 +117,20 @@ cart.empty   = "Your cart is empty"
 
 resolves to a `cart` object with both `items` and `empty`.
 
+A key is a full path *expression*: each element may be quoted or unquoted, and only an
+**unquoted** `.` separates elements — inside a quoted segment a dot is literal. An unquoted key
+with interior whitespace is a single element (its edges trimmed), so `a b c` is one key, not
+three:
+
+```hocon
+foo."bar.baz" = 1   # a two-element path; the second element is literally "bar.baz"
+"a.b"         = 2   # a single key containing a dot
+a b c         = 3   # the single key "a b c"
+```
+
+A key containing a literal dot is reachable through the parsed object structure but not through
+the dotted-string getter API (`getString("a.b")`), which always splits on `.`.
+
 ## Arrays
 
 Array elements are separated by commas or newlines, with an optional trailing comma, and may
@@ -170,6 +184,32 @@ conf = ${defaults} { retries = 5 }   # the defaults object with retries overridd
 
 Mixing kinds that cannot combine — an object or array joined with a string — raises a
 `HoconConcatException`.
+
+### Appending to arrays and self-reference
+
+A field can refer to its own previous value, which HOCON resolves by looking *backward* to the
+value already in scope rather than treating it as a cycle:
+
+```hocon
+path = [/bin]
+path = ${path} [/usr/bin]   # → [/bin, /usr/bin]
+```
+
+The `+=` shorthand appends a single element to the array already at a key (or starts a fresh
+array if the key is absent) — it is exactly `key = ${?key} [value]`:
+
+```hocon
+ports = [80]
+ports += 443                # → [80, 443]
+```
+
+`+=` looks back across object blocks, so the prior value can come from an earlier
+`server { … }` rather than the same one:
+
+```hocon
+server { ports = [80]  }
+server { ports += 443 }      # → server.ports = [80, 443]
+```
 
 ## Durations and sizes
 

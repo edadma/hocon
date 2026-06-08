@@ -15,10 +15,10 @@ Unlike `com.typesafe:config`, which is JVM-only, **hocon** is written in pure Sc
 `java.*` dependencies in its core, so the same parser runs on the **JVM**, in the browser/Node.js
 via **Scala.js**, and as a native binary via **Scala Native**.
 
-> **Status:** Phases 1–6 complete — the lexer, parser, untyped `Config` API, object merging,
-> substitutions, value concatenation, durations/sizes, `include` directives, and a typed
-> (case-class) decoder are in and tested on all three platforms. Only conformance against the
-> reference test corpus remains. See the roadmap below.
+> **Status:** All seven roadmap phases complete — the lexer, parser, untyped `Config` API, object
+> merging, substitutions, value concatenation, durations/sizes, `include` directives, a typed
+> (case-class) decoder, and HOCON-spec conformance (path expressions, `+=` append, self-referential
+> substitutions) are in and tested on all three platforms. See the roadmap below.
 
 ## Usage
 
@@ -97,6 +97,22 @@ val config = Hocon.parse("""
   url  = "http://"${host}":"${port}    // → "http://example.com:8080"
   xs   = [1, 2] [3, 4]                 // → [1, 2, 3, 4]
 """)
+```
+
+### Path expressions and array append
+
+A key is a path expression: only an unquoted `.` separates elements, so a quoted segment may
+contain a literal dot, and an unquoted key with spaces is one element. A field can refer to its
+own prior value, and `+=` appends an element to the array already at a key (HOCON's
+`key = ${?key} [value]` shorthand), looking back across object blocks:
+
+```scala
+val config = Hocon.parse("""
+  foo."bar.baz" = 1     // path elements: foo, "bar.baz"
+  server { ports = [80]  }
+  server { ports += 443 }   // → server.ports = [80, 443]
+""")
+config.getConfig("server").getStringList("ports")   // List("80", "443")
 ```
 
 ### Durations and sizes
@@ -196,7 +212,7 @@ hocon fills.
 | **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | ✅ |
 | **5** | `include` directives behind a pluggable, per-platform IO source. | ✅ |
 | **6** | Typed decoder with case-class derivation (`config.as[A]`). | ✅ |
-| **7** | Conformance against the Typesafe spec's test corpus. | |
+| **7** | HOCON-spec conformance: path expressions, `+=` append, self-referential substitutions. | ✅ |
 
 ## Building and Testing
 
