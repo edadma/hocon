@@ -17,7 +17,7 @@ final case class Config(root: ConfigObject):
         cv match
           case o: ConfigObject => o.fields.get(k).flatMap(go(_, rest))
           case _               => None
-    if path.isEmpty then Some(root) else go(root, path.split("\\.").toList)
+    if path.isEmpty then Some(root) else go(root, path.split('.').toList)
 
   /** True when `path` resolves to a present, non-null value. */
   def hasPath(path: String): Boolean = find(path).exists(_ != ConfigNull)

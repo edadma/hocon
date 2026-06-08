@@ -52,10 +52,7 @@ lazy val hocon = crossProject(JSPlatform, JVMPlatform, NativePlatform)
         "-language:dynamics",
       ),
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.19" % "test",
-    libraryDependencies ++= Seq(
-//      "com.github.scopt" %%% "scopt" % "4.1.0",
-//      "com.lihaoyi" %%% "pprint" % "0.9.6" % "test",
-    ),
+    libraryDependencies += "io.github.edadma" %%% "cross_platform" % "0.1.7",
     publishMavenStyle      := true,
     Test / publishArtifact := false,
   )

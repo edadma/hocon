@@ -9,19 +9,42 @@ import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
   */
 object Units:
 
-  private val quantity = "^\\s*(-?[0-9]+(?:\\.[0-9]+)?)\\s*([a-zA-Z]*)\\s*$".r
+  /** Split a unit-suffixed quantity into its numeric text and its unit, the shape both getters share:
+    * optional surrounding whitespace, a `-?digits(.digits)?` number, optional whitespace, then a run
+    * of letters. Written as a hand scan so the core needs no regex engine and behaves identically on
+    * every platform. Returns `None` when the whole string is not that shape.
+    */
+  private def splitQuantity(s: String): Option[(String, String)] =
+    val t = s.trim
+    val n = t.length
+    var i = 0
+    val numStart = i
+    if i < n && t.charAt(i) == '-' then i += 1
+    def digits(): Boolean =
+      val start = i
+      while i < n && t.charAt(i) >= '0' && t.charAt(i) <= '9' do i += 1
+      i > start
+    if !digits() then return None
+    if i < n && t.charAt(i) == '.' then
+      i += 1
+      if !digits() then return None
+    val num = t.substring(numStart, i)
+    while i < n && (t.charAt(i) == ' ' || t.charAt(i) == '\t') do i += 1
+    val unitStart = i
+    while i < n && { val c = t.charAt(i); (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') } do i += 1
+    val unit = t.substring(unitStart, i)
+    if i == n then Some((num, unit)) else None
 
   /** Parse a HOCON duration into a [[scala.concurrent.duration.FiniteDuration]]. Units follow the
     * spec — `ns`, `us`, `ms`, `s`, `m`, `h`, `d` and their long spellings; a bare number with no unit
     * is read as milliseconds.
     */
   def parseDuration(s: String): Option[FiniteDuration] =
-    s match
-      case quantity(num, unit) =>
-        durationNanosPerUnit(unit.toLowerCase).map { per =>
-          FiniteDuration((BigDecimal(num) * per).toLong, NANOSECONDS)
-        }
-      case _ => None
+    splitQuantity(s).flatMap { (num, unit) =>
+      durationNanosPerUnit(unit.toLowerCase).map { per =>
+        FiniteDuration((BigDecimal(num) * per).toLong, NANOSECONDS)
+      }
+    }
 
   private def durationNanosPerUnit(u: String): Option[Long] = u match
     case "" | "ms" | "milli" | "millis" | "millisecond" | "milliseconds" => Some(1000000L)
@@ -38,10 +61,9 @@ object Units:
     * bare number, `B`, or `byte(s)` is bytes. A fractional quantity truncates toward zero.
     */
   def parseBytes(s: String): Option[Long] =
-    s match
-      case quantity(num, unit) =>
-        bytesPerUnit(unit).map(per => (BigDecimal(num) * BigDecimal(per)).toLong)
-      case _ => None
+    splitQuantity(s).flatMap { (num, unit) =>
+      bytesPerUnit(unit).map(per => (BigDecimal(num) * BigDecimal(per)).toLong)
+    }
 
   private def bytesPerUnit(u: String): Option[BigInt] =
     val k2 = BigInt(1024)

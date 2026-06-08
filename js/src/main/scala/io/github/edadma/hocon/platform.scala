@@ -14,15 +14,7 @@ private[hocon] def platformEnvSource: EnvSource = name =>
     if js.isUndefined(v) || v == null then None else Some(v.asInstanceOf[String])
   }.toOption.flatten
 
-/** The Node include source. Only file access (via `fs.readFileSync`) is available; classpath and URL
-  * kinds resolve to `None`.
+/** The Node include source: file access through the cross-platform file API. Classpath and URL kinds
+  * resolve to `None`.
   */
-private[hocon] def platformConfigSource: ConfigSource = JsConfigSource
-
-private object JsConfigSource extends ConfigSource:
-  def load(kind: IncludeKind, spec: String): Option[String] = kind match
-    case IncludeKind.File | IncludeKind.Heuristic => readFile(spec)
-    case _                                        => None
-
-  private def readFile(path: String): Option[String] =
-    Try(js.Dynamic.global.require("fs").readFileSync(path, "utf8").asInstanceOf[String]).toOption
+private[hocon] def platformConfigSource: ConfigSource = ConfigSource.files

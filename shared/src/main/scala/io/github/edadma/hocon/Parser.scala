@@ -25,7 +25,6 @@ final class Parser(
     includeStack: Set[String] = Set.empty,
 ):
 
-  private val numberRe          = "^-?\\d+(\\.\\d+)?([eE][+-]?\\d+)?$".r
   private val includeQualifiers = Set("required", "file", "url", "classpath")
 
   private var idx = 0
@@ -95,7 +94,7 @@ final class Parser(
     * `required(file(` — since both letters and parens lex into a single unquoted run.
     */
   private def isQualifierPrefix(q: String): Boolean =
-    q.endsWith("(") && q.split("\\(").forall(s => s.isEmpty || includeQualifiers(s))
+    q.endsWith("(") && q.split('(').forall(s => s.isEmpty || includeQualifiers(s))
 
   private def nextSignificant(from: Int): Int =
     var j = from
@@ -123,7 +122,7 @@ final class Parser(
           gotSpec = true
         case Unquoted(q) if isQualifierPrefix(q) =>
           idx += 1
-          for name <- q.split("\\(").toList.filter(_.nonEmpty) do
+          for name <- q.split('(').toList.filter(_.nonEmpty) do
             depth += 1
             name match
               case "required"  => required = true
@@ -234,7 +233,7 @@ final class Parser(
           idx += 1; if hasText then pending += w // edge whitespace is dropped, interior preserved
         case Unquoted(t) =>
           idx += 1; started = true
-          val parts = t.split("\\.", -1)
+          val parts = splitKeepingEmpty(t, '.')
           for (p, i) <- parts.zipWithIndex do
             if i > 0 then endElement() // an unquoted '.' closes the current element
             if p.nonEmpty then addText(p)
@@ -305,11 +304,45 @@ final class Parser(
     case _                   => false
 
   private def classify(raw: String): ConfigValue = raw match
-    case "true"                       => ConfigBoolean(true)
-    case "false"                      => ConfigBoolean(false)
-    case "null"                       => ConfigNull
-    case s if numberRe.matches(s)     => ConfigNumber(s)
-    case s                            => ConfigString(s)
+    case "true"            => ConfigBoolean(true)
+    case "false"           => ConfigBoolean(false)
+    case "null"            => ConfigNull
+    case s if isNumber(s)  => ConfigNumber(s)
+    case s                 => ConfigString(s)
+
+  /** Whether `s` is a JSON/HOCON number literal — `-?digits(.digits)?([eE][+-]?digits)?` — written
+    * as a hand scan so the core depends on no regex engine and behaves identically on every platform.
+    */
+  private def isNumber(s: String): Boolean =
+    val n = s.length
+    var i = 0
+    def digits(): Boolean =
+      val start = i
+      while i < n && s.charAt(i) >= '0' && s.charAt(i) <= '9' do i += 1
+      i > start
+    if i < n && s.charAt(i) == '-' then i += 1
+    if !digits() then return false
+    if i < n && s.charAt(i) == '.' then
+      i += 1
+      if !digits() then return false
+    if i < n && (s.charAt(i) == 'e' || s.charAt(i) == 'E') then
+      i += 1
+      if i < n && (s.charAt(i) == '+' || s.charAt(i) == '-') then i += 1
+      if !digits() then return false
+    i == n
+
+  /** Split on a single character, keeping every empty field including trailing ones — unlike
+    * `StringOps.split(Char)`, which drops trailing empties — so `a..b` and a trailing `.` are visible
+    * as empty path elements.
+    */
+  private def splitKeepingEmpty(s: String, sep: Char): Array[String] =
+    val out = scala.collection.mutable.ArrayBuffer.empty[String]
+    val cur = StringBuilder()
+    for c <- s do
+      if c == sep then { out += cur.toString; cur.clear() }
+      else cur += c
+    out += cur.toString
+    out.toArray
 
   /** Insert `value` at `path` into `fields`, creating intermediate objects and deep-merging when an
     * object meets an existing object at the same key.

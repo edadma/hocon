@@ -1,5 +1,8 @@
 package io.github.edadma.hocon
 
+import io.github.edadma.cross_platform.{readFile, readableFile}
+import scala.util.Try
+
 /** How an `include` named its target. The bare `include "x"` form is [[Heuristic]] — the source
   * decides where to look; the qualified forms pin the lookup to a single mechanism.
   */
@@ -27,6 +30,17 @@ object ConfigSource:
     * virtual includes and for tests that need deterministic, platform-independent include content.
     */
   def fromMap(resources: Map[String, String]): ConfigSource = (_, spec) => resources.get(spec)
+
+  /** Reads include targets from the local filesystem through the cross-platform file API, so the same
+    * code serves the JVM, Scala.js (Node), and Scala Native. Only the [[IncludeKind.File]] and bare
+    * [[IncludeKind.Heuristic]] forms are honoured here; [[IncludeKind.Url]] and [[IncludeKind.Classpath]]
+    * resolve to `None`, and the JVM default layers those on top.
+    */
+  val files: ConfigSource = (kind, spec) =>
+    kind match
+      case IncludeKind.File | IncludeKind.Heuristic =>
+        if readableFile(spec) then Try(readFile(spec)).toOption else None
+      case _ => None
 
   /** The platform's real source: files (and, on the JVM, the classpath and URLs). On Scala.js and
     * Scala Native only file access is available; the other kinds resolve to `None`.
