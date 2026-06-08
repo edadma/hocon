@@ -15,12 +15,20 @@ These live on the `Hocon` object.
 |--------|---------|-------------|
 | `Hocon.parse(input: String)` | `Config` | Parse HOCON source and resolve `${...}` substitutions. Throws `ParseError` on a syntax error. |
 | `Hocon.parse(input: String, env: EnvSource)` | `Config` | As above, falling back to `env` for substitutions absent from the document. |
+| `Hocon.parse(input: String, source: ConfigSource)` | `Config` | As above, loading `include` directives through `source`. |
+| `Hocon.parse(input: String, env: EnvSource, source: ConfigSource)` | `Config` | Both seams supplied. |
 | `Hocon.load(configs: Config*)` | `Config` | Merge configs so that **later arguments win**. No arguments → the empty config. |
 
 `EnvSource` is the seam substitutions use for environment fallback. The default is
-`EnvSource.empty`; build one from a map with `EnvSource.fromMap(...)`, or implement the
-single-method trait to wire in the real environment. See the
+`EnvSource.empty`; build one from a map with `EnvSource.fromMap(...)`, use `EnvSource.system`
+for the real process environment, or implement the single-method trait yourself. See the
 [substitutions guide](/guide/substitutions/).
+
+`ConfigSource` is the seam `include` directives use to read other documents. The default is
+`ConfigSource.empty` (no IO — optional includes are skipped, a `required(...)` one raises);
+`ConfigSource.fromMap(...)` resolves includes from an in-memory map, and `ConfigSource.default`
+reads the filesystem on every platform plus the classpath and URLs on the JVM. See the
+[format guide](/guide/format/#includes).
 
 ```scala
 import io.github.edadma.hocon.*
@@ -125,3 +133,5 @@ All errors extend `HoconException`:
 - `CircularReferenceException(chain)` — substitutions reference each other in a cycle.
 - `HoconConcatException(message)` — a value concatenation mixes incompatible kinds, such as an
   object or array joined with a string.
+- `IncludeException(message)` — a `required(...)` include resolved to nothing, or a cycle of
+  files includes one another.

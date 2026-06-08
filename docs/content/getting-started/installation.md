@@ -8,8 +8,8 @@ the system level — just add it to your build.
 
 [= note =]
 hocon is under active development. The parser, the untyped `Config` API, object merging,
-substitutions, value concatenation, and durations/sizes are in place and tested on all three
-platforms; `include` directives and a typed decoder are on the [roadmap](/guide/roadmap/).
+substitutions, value concatenation, durations/sizes, and `include` directives are in place and
+tested on all three platforms; a typed case-class decoder is on the [roadmap](/guide/roadmap/).
 [= /note =]
 
 ## Requirements

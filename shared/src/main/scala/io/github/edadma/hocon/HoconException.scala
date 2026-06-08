@@ -31,3 +31,8 @@ final class CircularReferenceException(val chain: List[String])
   * string, which HOCON does not allow.
   */
 final class HoconConcatException(message: String) extends HoconException(message)
+
+/** Thrown when an `include` cannot be honoured: a `required(...)` target that no source resolves, or
+  * a cycle of files that include one another.
+  */
+final class IncludeException(message: String) extends HoconException(message)

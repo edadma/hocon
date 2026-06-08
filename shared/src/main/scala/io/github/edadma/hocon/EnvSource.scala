@@ -17,3 +17,8 @@ object EnvSource:
 
   /** Build an `EnvSource` from a plain map — handy for tests and fixed environments. */
   def fromMap(vars: Map[String, String]): EnvSource = vars.get(_)
+
+  /** The platform's real process environment (`System.getenv` on the JVM and Native, `process.env`
+    * on Node). Pass it to `Hocon.parse` to let `${VAR}` substitutions fall back to the environment.
+    */
+  def system: EnvSource = platformEnvSource

@@ -428,6 +428,135 @@ class Tests extends AnyFreeSpec with Matchers:
     }
   }
 
+  "includes" - {
+    "an include merges the named resource's fields" in {
+      val src = ConfigSource.fromMap(Map("base.conf" -> "b = 2"))
+      val c = Hocon.parse(
+        """
+        include "base.conf"
+        a = 1
+        """,
+        src,
+      )
+      c.getInt("a") shouldBe 1
+      c.getInt("b") shouldBe 2
+    }
+
+    "fields after an include override the included values" in {
+      val src = ConfigSource.fromMap(Map("base.conf" -> "x = 1"))
+      val c = Hocon.parse(
+        """
+        include "base.conf"
+        x = 2
+        """,
+        src,
+      )
+      c.getInt("x") shouldBe 2
+    }
+
+    "an include overrides fields defined before it" in {
+      val src = ConfigSource.fromMap(Map("over.conf" -> "x = 9"))
+      val c = Hocon.parse(
+        """
+        x = 1
+        include "over.conf"
+        """,
+        src,
+      )
+      c.getInt("x") shouldBe 9
+    }
+
+    "objects deep-merge across an include" in {
+      val src = ConfigSource.fromMap(Map("base.conf" -> "srv { host = localhost }"))
+      val c = Hocon.parse(
+        """
+        include "base.conf"
+        srv { port = 8080 }
+        """,
+        src,
+      )
+      c.getString("srv.host") shouldBe "localhost"
+      c.getInt("srv.port") shouldBe 8080
+    }
+
+    "an optional include that resolves to nothing is skipped" in {
+      val c = Hocon.parse(
+        """
+        include "missing.conf"
+        a = 1
+        """,
+        ConfigSource.empty,
+      )
+      c.getInt("a") shouldBe 1
+      c.hasPath("missing.conf") shouldBe false
+    }
+
+    "a required include that resolves to nothing throws" in {
+      a[IncludeException] should be thrownBy Hocon.parse(
+        """include required("missing.conf")""",
+        ConfigSource.empty,
+      )
+    }
+
+    "the file/url/classpath qualifier forms parse and load" in {
+      val src = ConfigSource.fromMap(Map("a.conf" -> "a = 1", "b.conf" -> "b = 2"))
+      val c = Hocon.parse(
+        """
+        include file("a.conf")
+        include classpath("b.conf")
+        """,
+        src,
+      )
+      c.getInt("a") shouldBe 1
+      c.getInt("b") shouldBe 2
+    }
+
+    "required wraps another qualifier" in {
+      val src = ConfigSource.fromMap(Map("a.conf" -> "a = 1"))
+      val c   = Hocon.parse("""include required(file("a.conf"))""", src)
+      c.getInt("a") shouldBe 1
+    }
+
+    "includes nest" in {
+      val src = ConfigSource.fromMap(
+        Map(
+          "a.conf" -> "include \"b.conf\"\na = 1",
+          "b.conf" -> "b = 2",
+        ),
+      )
+      val c = Hocon.parse("""include "a.conf"""", src)
+      c.getInt("a") shouldBe 1
+      c.getInt("b") shouldBe 2
+    }
+
+    "a cycle of includes throws" in {
+      val src = ConfigSource.fromMap(
+        Map(
+          "a.conf" -> "include \"b.conf\"",
+          "b.conf" -> "include \"a.conf\"",
+        ),
+      )
+      a[IncludeException] should be thrownBy Hocon.parse("""include "a.conf"""", src)
+    }
+
+    "a substitution resolves against included content" in {
+      val src = ConfigSource.fromMap(Map("base.conf" -> "host = localhost"))
+      val c = Hocon.parse(
+        """
+        include "base.conf"
+        url = ${host}
+        """,
+        src,
+      )
+      c.getString("url") shouldBe "localhost"
+    }
+
+    "include is still usable as an ordinary key" in {
+      val c = Hocon.parse("""include = "a value"""")
+      c.getString("include") shouldBe "a value"
+    }
+  }
+
   "i18n usage" - {
     "a realistic translation file parses" in {
       val c = Hocon.parse("""

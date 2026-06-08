@@ -125,12 +125,22 @@ object Hocon:
 
   /** Parse HOCON source and resolve its `${...}` substitutions. Substitutions resolve against this
     * document only; required ones that are found nowhere raise [[UnresolvedSubstitutionException]].
+    * The pure default touches no IO, so `include` directives have no source: optional includes are
+    * skipped and a `required(...)` include raises — pass a [[ConfigSource]] to load them.
     */
-  def parse(input: String): Config = parse(input, EnvSource.empty)
+  def parse(input: String): Config = parse(input, EnvSource.empty, ConfigSource.empty)
 
   /** Parse and resolve, falling back to `env` for any substitution not found in the document. */
-  def parse(input: String, env: EnvSource): Config =
-    val root = Parser(Lexer(input).tokenize()).parseRoot()
+  def parse(input: String, env: EnvSource): Config = parse(input, env, ConfigSource.empty)
+
+  /** Parse and resolve, loading `include` directives through `source`. */
+  def parse(input: String, source: ConfigSource): Config = parse(input, EnvSource.empty, source)
+
+  /** Parse and resolve with both seams supplied: `env` for substitution fallback and `source` for
+    * `include` directives.
+    */
+  def parse(input: String, env: EnvSource, source: ConfigSource): Config =
+    val root = Parser(Lexer(input).tokenize(), source).parseRoot()
     Config(Resolver.resolve(root, env))
 
   /** Merge configs so that later arguments win over earlier ones — i.e. pass the base first and the

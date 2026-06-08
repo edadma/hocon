@@ -190,9 +190,32 @@ read as milliseconds. Size units distinguish powers of 1024 (`K`, `Ki`, `KiB`, �
 1000 (`kB`, `MB`, …), with a bare number read as bytes. See the
 [`Config` reference](/reference/config/).
 
-## Not yet supported
+## Includes
 
-`include` directives — pulling in other files — are on the [roadmap](/guide/roadmap/).
+An `include` statement pulls another document in at that point in an object. The included
+fields merge as if they had been written there, so later fields override them and substitutions
+see the combined tree:
+
+```hocon
+include "defaults.conf"
+host = override.example.com   # wins over anything defaults.conf set for host
+```
+
+The bare form lets the source decide where to look; the qualified forms pin it to one
+mechanism, and `required(...)` turns a missing target into an error instead of a silent skip:
+
+```hocon
+include file("local.conf")
+include classpath("reference.conf")
+include url("https://example.com/shared.conf")
+include required("must-exist.conf")
+```
+
+Where an include can be read from is the one platform-specific corner of the library: it goes
+through a [`ConfigSource`](/reference/config/) that you pass to `Hocon.parse`. The default
+source reads files on every platform, plus the classpath and URLs on the JVM. A missing
+optional include is ignored; a missing `required(...)` one raises `IncludeException`, as does a
+cycle of files that include each other.
 
 Because unquoted strings forbid `:` and `//` starts a comment, **URLs must be quoted**
 (`url = "https://example.com"`) — this matches the reference implementation.

@@ -64,9 +64,11 @@ messages("farewell")   // "Goodbye"  (from the base locale)
 - **Value concatenation** — joining strings, arrays, and objects written side by side
   (`"http://"${host}`, `[1] [2]`, `${defaults} { … }`).
 - **Durations and sizes** — `getDuration` (`10s`, `5 minutes`) and `getBytes` (`512K`, `10MB`).
+- **Includes** — `include "other.conf"` (and `file`/`url`/`classpath`/`required` forms) behind a
+  pluggable, per-platform `ConfigSource`.
 - **An i18n sidecar** — `Messages` with placeholder interpolation.
 
-`include` directives and a typed case-class decoder are on the [roadmap](/guide/roadmap/).
+A typed case-class decoder (`config.as[A]`) is on the [roadmap](/guide/roadmap/).
 
 ## Where to go next
 

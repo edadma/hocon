@@ -15,9 +15,9 @@ Unlike `com.typesafe:config`, which is JVM-only, **hocon** is written in pure Sc
 `java.*` dependencies in its core, so the same parser runs on the **JVM**, in the browser/Node.js
 via **Scala.js**, and as a native binary via **Scala Native**.
 
-> **Status:** Phases 1–4 complete — the lexer, parser, untyped `Config` API, object merging,
-> substitutions, value concatenation, and durations/sizes are in and tested on all three platforms.
-> `include` directives and a typed (case-class) decoder follow. See the roadmap below.
+> **Status:** Phases 1–5 complete — the lexer, parser, untyped `Config` API, object merging,
+> substitutions, value concatenation, durations/sizes, and `include` directives are in and tested on
+> all three platforms. A typed (case-class) decoder follows. See the roadmap below.
 
 ## Usage
 
@@ -112,6 +112,28 @@ config.getBytes("cache")        // 524288
 Duration units are `ns`/`us`/`ms`/`s`/`m`/`h`/`d` (bare number = milliseconds); size units
 distinguish powers of 1024 (`K`, `Ki`, `KiB`) from powers of 1000 (`kB`, `MB`).
 
+### Includes
+
+`include "other.conf"` pulls another document in at that point, merging its fields so later fields
+override them. The qualified forms pin the lookup, and `required(...)` errors instead of skipping a
+missing target. Where includes are read from is the one platform-specific corner — it goes through a
+`ConfigSource` you pass to `parse`:
+
+```scala
+import io.github.edadma.hocon.*
+
+// Read files (and, on the JVM, the classpath and URLs) with the platform default source:
+val config = Hocon.parse("""include "app.conf"""", ConfigSource.default)
+
+// Or resolve includes from memory — identical on every platform, ideal for tests:
+val src = ConfigSource.fromMap(Map("app.conf" -> """name = "demo""""))
+Hocon.parse("""include "app.conf"""", src).getString("name")   // "demo"
+```
+
+`ConfigSource.empty` (the default for `Hocon.parse(text)`) does no IO: optional includes are skipped
+and a `required(...)` one raises `IncludeException`. Pass `EnvSource.system` alongside to let
+`${VAR}` substitutions fall back to the real process environment.
+
 A note on quoting: HOCON allows unquoted strings, but forbids the characters
 `$ " { } [ ] : = , + # ` ^ ? ! @ * &` and `\` inside them. Most UI strings (`Hello, world`,
 `Are you sure?`, `{count} items`) hit one of these, so **quote your translation strings**. This is
@@ -142,7 +164,7 @@ hocon fills.
 | **2** | Object merging + `withFallback` (base locale + overrides). | ✅ |
 | **3** | Substitutions: `${path}`, `${?path}`, env fallback, cycle detection. | ✅ |
 | **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | ✅ |
-| **5** | `include` directives behind a pluggable, per-platform IO source. | |
+| **5** | `include` directives behind a pluggable, per-platform IO source. | ✅ |
 | **6** | Typed decoder with case-class derivation (`config.as[A]`). | |
 | **7** | Conformance against the Typesafe spec's test corpus. | |
 

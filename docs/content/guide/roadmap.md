@@ -14,7 +14,7 @@ eventual oracle.
 | **2** | Object merging + `withFallback` (base locale + overrides). | ✅ Done |
 | **3** | Substitutions: `${path}`, `${?path}`, environment fallback, cycle detection. | ✅ Done |
 | **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | ✅ Done |
-| **5** | `include` directives behind a pluggable, per-platform IO source. | Planned |
+| **5** | `include` directives behind a pluggable, per-platform IO source. | ✅ Done |
 | **6** | Typed decoder with case-class derivation (`config.as[A]`). | Planned |
 | **7** | Conformance against the reference test corpus. | Planned |
 
@@ -22,9 +22,9 @@ eventual oracle.
 
 - **Cross-platform from the first commit.** The lexer, parser, and `Config` API are pure
   Scala in a shared source set; every test runs identically on the JVM, Scala.js, and Scala
-  Native. IO and environment access — needed for `include` and substitution fallback — will
-  live behind a small capability seam with per-platform implementations, so the core never
-  touches a filesystem.
+  Native. IO and environment access — needed for `include` and substitution fallback — live
+  behind small capability seams (`ConfigSource`, `EnvSource`) with per-platform
+  implementations, so the core never touches a filesystem.
 - **Untyped core first, typed decoder later.** The `Config` tree and its getters are the
   foundation; the case-class decoder (`config.as[A]`) layers on top once the value model is
   complete, mirroring how the typed and untyped layers separate elsewhere.
