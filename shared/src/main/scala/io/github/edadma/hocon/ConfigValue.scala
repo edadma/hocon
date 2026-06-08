@@ -56,6 +56,19 @@ case object ConfigNull extends ConfigValue
   */
 final case class ConfigSubstitution(path: String, optional: Boolean) extends ConfigValue
 
+/** An unresolved value concatenation — a whitespace-separated run of pieces written without a
+  * separator, like `a "b" ${c}` or `[1] [2]` or `{x=1} {y=2}`. The resolver collapses it: a run of
+  * arrays concatenates element-wise, a run of objects deep-merges left to right, and anything else
+  * renders each piece to text and joins it, preserving the interior whitespace carried in `parts`.
+  * Like [[ConfigSubstitution]], these never survive resolution.
+  */
+final case class ConfigConcat(parts: List[ConfigValue]) extends ConfigValue
+
+/** Interior whitespace inside a [[ConfigConcat]]: it is preserved when the concatenation renders as a
+  * string and ignored when it renders as an array or object. Appears only inside a concat's parts.
+  */
+private[hocon] final case class ConfigWhitespace(ws: String) extends ConfigValue
+
 /** Internal sentinel for an optional substitution that resolved to nothing: the resolver drops the
   * field or array element that holds it. Never escapes resolution.
   */

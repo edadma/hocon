@@ -61,10 +61,12 @@ messages("farewell")   // "Goodbye"  (from the base locale)
   merge and last-wins layering.
 - **Substitutions** — `${path}` and optional `${?path}`, resolved against the merged root,
   with environment fallback and cycle detection.
+- **Value concatenation** — joining strings, arrays, and objects written side by side
+  (`"http://"${host}`, `[1] [2]`, `${defaults} { … }`).
+- **Durations and sizes** — `getDuration` (`10s`, `5 minutes`) and `getBytes` (`512K`, `10MB`).
 - **An i18n sidecar** — `Messages` with placeholder interpolation.
 
-Value concatenation, durations and sizes, `include` directives, and a typed case-class
-decoder are on the [roadmap](/guide/roadmap/).
+`include` directives and a typed case-class decoder are on the [roadmap](/guide/roadmap/).
 
 ## Where to go next
 

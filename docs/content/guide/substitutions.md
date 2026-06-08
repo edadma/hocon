@@ -81,9 +81,20 @@ Hocon.parse("""
 // CircularReferenceException: Circular reference in substitution: a -> b -> a
 ```
 
-## What is deferred
+## Concatenating with surrounding text
 
-Mixing a substitution with surrounding text — `greeting = Hello ${name}` — is *value
-concatenation*, which is a later phase. For now a value is either a single `${...}` substitution or
-ordinary text; combining them raises a parse error. Quote-and-merge or resolve in code until
-concatenation lands.
+A substitution may also be one piece of a larger value. Written with whitespace next to other
+text, it joins into a single string — this is [value concatenation](/guide/format/#value-concatenation):
+
+```scala
+val config = Hocon.parse("""
+  host = example.com
+  port = 8080
+  url  = "http://"${host}":"${port}
+""")
+
+config.getString("url")   // "http://example.com:8080"
+```
+
+The pieces resolve and then concatenate, so a substitution can sit inside a URL, a path, or any
+other composed string.

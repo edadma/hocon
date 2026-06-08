@@ -13,7 +13,7 @@ eventual oracle.
 | **1** | Lexer + parser → untyped `Config` (comments, quoted/unquoted strings, nested objects, path-expression keys, arrays). | ✅ Done |
 | **2** | Object merging + `withFallback` (base locale + overrides). | ✅ Done |
 | **3** | Substitutions: `${path}`, `${?path}`, environment fallback, cycle detection. | ✅ Done |
-| **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | Planned |
+| **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | ✅ Done |
 | **5** | `include` directives behind a pluggable, per-platform IO source. | Planned |
 | **6** | Typed decoder with case-class derivation (`config.as[A]`). | Planned |
 | **7** | Conformance against the reference test corpus. | Planned |

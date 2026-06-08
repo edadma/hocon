@@ -15,9 +15,9 @@ Unlike `com.typesafe:config`, which is JVM-only, **hocon** is written in pure Sc
 `java.*` dependencies in its core, so the same parser runs on the **JVM**, in the browser/Node.js
 via **Scala.js**, and as a native binary via **Scala Native**.
 
-> **Status:** Phase 1 complete — the lexer, parser, and untyped `Config` API are in and tested on
-> all three platforms. This is enough to read i18n message files today. Object merging,
-> substitutions, includes, and a typed (case-class) decoder follow. See the roadmap below.
+> **Status:** Phases 1–4 complete — the lexer, parser, untyped `Config` API, object merging,
+> substitutions, value concatenation, and durations/sizes are in and tested on all three platforms.
+> `include` directives and a typed (case-class) decoder follow. See the roadmap below.
 
 ## Usage
 
@@ -81,8 +81,36 @@ Hocon.parse("x = ${?missing}").hasPath("x")   // false
 Hocon.parse("home = ${HOME}", EnvSource.fromMap(sys.env))
 ```
 
-Circular references throw `CircularReferenceException`. Mixing a substitution with surrounding text
-(`a ${b} c`) is value concatenation, which is Phase 4.
+Circular references throw `CircularReferenceException`.
+
+### Value concatenation
+
+Pieces written side by side with only whitespace between them concatenate. Strings, numbers, and
+substitutions join into one string (interior whitespace preserved); arrays concatenate element-wise;
+objects deep-merge left to right.
+
+```scala
+val config = Hocon.parse("""
+  host = example.com
+  port = 8080
+  url  = "http://"${host}":"${port}    // → "http://example.com:8080"
+  xs   = [1, 2] [3, 4]                 // → [1, 2, 3, 4]
+""")
+```
+
+### Durations and sizes
+
+Read unit-suffixed values with `getDuration` (a cross-platform `FiniteDuration`) and `getBytes`
+(a `Long`):
+
+```scala
+val config = Hocon.parse("timeout = 10s, cache = 512K")
+config.getDuration("timeout")   // 10.seconds
+config.getBytes("cache")        // 524288
+```
+
+Duration units are `ns`/`us`/`ms`/`s`/`m`/`h`/`d` (bare number = milliseconds); size units
+distinguish powers of 1024 (`K`, `Ki`, `KiB`) from powers of 1000 (`kB`, `MB`).
 
 A note on quoting: HOCON allows unquoted strings, but forbids the characters
 `$ " { } [ ] : = , + # ` ^ ? ! @ * &` and `\` inside them. Most UI strings (`Hello, world`,
@@ -113,7 +141,7 @@ hocon fills.
 | **1** | Lexer + parser → untyped `Config` (comments, quoted/unquoted strings, nested objects, path-expression keys, arrays). **i18n-usable.** | ✅ |
 | **2** | Object merging + `withFallback` (base locale + overrides). | ✅ |
 | **3** | Substitutions: `${path}`, `${?path}`, env fallback, cycle detection. | ✅ |
-| **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | |
+| **4** | Value concatenation + durations (`10s`) and sizes (`512K`, `10MB`). | ✅ |
 | **5** | `include` directives behind a pluggable, per-platform IO source. | |
 | **6** | Typed decoder with case-class derivation (`config.as[A]`). | |
 | **7** | Conformance against the Typesafe spec's test corpus. | |

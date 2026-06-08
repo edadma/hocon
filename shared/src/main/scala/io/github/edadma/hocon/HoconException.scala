@@ -26,3 +26,8 @@ final class UnresolvedSubstitutionException(val path: String)
   */
 final class CircularReferenceException(val chain: List[String])
     extends HoconException(s"Circular reference in substitution: ${chain.mkString(" -> ")}")
+
+/** Thrown when a value concatenation mixes incompatible kinds — an object or array joined with a
+  * string, which HOCON does not allow.
+  */
+final class HoconConcatException(message: String) extends HoconException(message)

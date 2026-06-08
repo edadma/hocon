@@ -43,12 +43,30 @@ absent or `null`, and `WrongTypeException` when the value is the wrong shape.
 | `getConfig(path)` | `Config` | The sub-object at `path`. |
 | `getList(path)` | `List[ConfigValue]` | The raw array elements. |
 | `getStringList(path)` | `List[String]` | Each element coerced to string. |
+| `getDuration(path)` | `FiniteDuration` | A HOCON duration (`10s`, `5 minutes`); a bare number is milliseconds. |
+| `getBytes(path)` | `Long` | A HOCON size in bytes (`512K`, `10MB`); powers of 1024 and 1000 are distinguished. |
 | `getValue(path)` | `ConfigValue` | The raw value node, whatever its type. |
 
 ```scala
 config.getInt("a")          // 1
 config.getInt("b.c")        // 2
 config.getConfig("b").getInt("c")  // 2
+```
+
+### Durations and sizes
+
+`getDuration` reads a HOCON time value into a cross-platform
+`scala.concurrent.duration.FiniteDuration`. Units are `ns`, `us`, `ms`, `s`, `m`, `h`, `d` and
+their long spellings; a number with no unit is read as milliseconds.
+
+`getBytes` reads a HOCON memory size into a `Long` count of bytes. Powers-of-1024 units (`K`,
+`Ki`, `KiB`, …) and powers-of-1000 units (`kB`, `MB`, …) are distinguished per the spec; a bare
+number is a byte count, and a fractional quantity truncates.
+
+```scala
+val c = Hocon.parse("timeout = 30s, cache = 512K")
+c.getDuration("timeout")    // 30.seconds
+c.getBytes("cache")         // 524288
 ```
 
 ## Optional access
@@ -66,6 +84,8 @@ config.getConfig("b").getInt("c")  // 2
 | `getBooleanOpt(path)` | `Option[Boolean]` |
 | `getConfigOpt(path)` | `Option[Config]` |
 | `getListOpt(path)` | `Option[List[ConfigValue]]` |
+| `getDurationOpt(path)` | `Option[FiniteDuration]` |
+| `getBytesOpt(path)` | `Option[Long]` |
 
 ```scala
 config.hasPath("b.c")        // true
@@ -103,3 +123,5 @@ All errors extend `HoconException`:
 - `UnresolvedSubstitutionException(path)` — a required `${path}` found in neither the config
   nor the environment.
 - `CircularReferenceException(chain)` — substitutions reference each other in a cycle.
+- `HoconConcatException(message)` — a value concatenation mixes incompatible kinds, such as an
+  object or array joined with a string.

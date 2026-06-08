@@ -322,8 +322,109 @@ class Tests extends AnyFreeSpec with Matchers:
       c.getString("x") shouldBe "from-config"
     }
 
-    "mixing a substitution with other text is rejected (deferred to a later phase)" in {
-      a[ParseError] should be thrownBy Hocon.parse("greeting = hello ${name}")
+    "a substitution concatenates with surrounding text" in {
+      val c = Hocon.parse("""
+        name = world
+        greeting = hello ${name}
+      """)
+      c.getString("greeting") shouldBe "hello world"
+    }
+  }
+
+  "value concatenation" - {
+    "unquoted and quoted pieces join with interior whitespace preserved" in {
+      val c = Hocon.parse("""msg = please   say "hello"  now""")
+      c.getString("msg") shouldBe "please   say hello  now"
+    }
+
+    "a substitution joins on both sides" in {
+      val c = Hocon.parse("""
+        host = example.com
+        port = 8080
+        url  = "http://"${host}":"${port}
+      """)
+      c.getString("url") shouldBe "http://example.com:8080"
+    }
+
+    "an absent optional substitution contributes nothing" in {
+      val c = Hocon.parse("""greeting = hi ${?missing}there""")
+      c.getString("greeting") shouldBe "hi there"
+    }
+
+    "arrays concatenate element-wise" in {
+      val c = Hocon.parse("""xs = [1, 2] [3, 4]""")
+      c.getList("xs") shouldBe List(
+        ConfigNumber("1"),
+        ConfigNumber("2"),
+        ConfigNumber("3"),
+        ConfigNumber("4"),
+      )
+    }
+
+    "arrays concatenate across a substitution" in {
+      val c = Hocon.parse("""
+        base = [a, b]
+        all  = ${base} [c]
+      """)
+      c.getStringList("all") shouldBe List("a", "b", "c")
+    }
+
+    "objects in a concatenation deep-merge left to right" in {
+      val c = Hocon.parse("""
+        defaults { timeout = 30, retries = 3 }
+        service  = ${defaults} { retries = 5, name = svc }
+      """)
+      c.getInt("service.timeout") shouldBe 30
+      c.getInt("service.retries") shouldBe 5
+      c.getString("service.name") shouldBe "svc"
+    }
+
+    "mixing an object with a string is rejected" in {
+      a[HoconConcatException] should be thrownBy Hocon.parse("""x = pre { a = 1 }""")
+    }
+  }
+
+  "durations and sizes" - {
+    "duration units parse to a FiniteDuration" in {
+      import scala.concurrent.duration.*
+      val c = Hocon.parse("""
+        a = 10s
+        b = 5 minutes
+        c = 500ms
+        d = 250
+      """)
+      c.getDuration("a") shouldBe 10.seconds
+      c.getDuration("b") shouldBe 5.minutes
+      c.getDuration("c") shouldBe 500.millis
+      c.getDuration("d") shouldBe 250.millis // bare number is milliseconds
+    }
+
+    "size units distinguish powers of 1024 and 1000" in {
+      val c = Hocon.parse("""
+        a = 512K
+        b = 1 KiB
+        c = 10MB
+        d = 2 GiB
+        e = 2048
+      """)
+      c.getBytes("a") shouldBe 512L * 1024
+      c.getBytes("b") shouldBe 1024L
+      c.getBytes("c") shouldBe 10L * 1000 * 1000
+      c.getBytes("d") shouldBe 2L * 1024 * 1024 * 1024
+      c.getBytes("e") shouldBe 2048L
+    }
+
+    "an unparseable duration or size is a wrong-type error" in {
+      val c = Hocon.parse("""a = "not a duration"""")
+      a[WrongTypeException] should be thrownBy c.getDuration("a")
+      a[WrongTypeException] should be thrownBy c.getBytes("a")
+    }
+
+    "opt variants return None on a missing path" in {
+      val c = Hocon.parse("a = 10s")
+      c.getDurationOpt("a").isDefined shouldBe true
+      c.getDurationOpt("missing") shouldBe None
+      c.getBytesOpt("missing") shouldBe None
     }
   }
 

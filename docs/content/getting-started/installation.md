@@ -7,10 +7,9 @@ hocon is a pure-Scala library with no native dependencies, so there is nothing t
 the system level — just add it to your build.
 
 [= note =]
-hocon is in early development. The parser and the untyped `Config` API (Phases 1–2) are in
-place and tested on all three platforms; substitutions, includes, and a typed decoder are on
-the [roadmap](/guide/roadmap/). Until the first release is published to Maven Central you can
-build it from the repository checkout — see *From source* below.
+hocon is under active development. The parser, the untyped `Config` API, object merging,
+substitutions, value concatenation, and durations/sizes are in place and tested on all three
+platforms; `include` directives and a typed decoder are on the [roadmap](/guide/roadmap/).
 [= /note =]
 
 ## Requirements
@@ -41,8 +40,8 @@ lazy val app = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 
 ## From source
 
-While the library is pre-release, depend on it as a source dependency. Clone it next to your
-project:
+To track the latest changes, you can depend on hocon as a source dependency instead. Clone it
+next to your project:
 
 ```bash
 git clone https://github.com/edadma/hocon.git

@@ -1,5 +1,7 @@
 package io.github.edadma.hocon
 
+import scala.concurrent.duration.FiniteDuration
+
 /** An immutable, untyped view over a parsed HOCON document.
   *
   * Paths are dot-separated expressions (`a.b.c`). Typed getters interpret the value at a path and
@@ -32,6 +34,8 @@ final case class Config(root: ConfigObject):
     case _: ConfigBoolean      => "boolean"
     case ConfigNull            => "null"
     case _: ConfigSubstitution => "substitution"
+    case _: ConfigConcat       => "concatenation"
+    case _: ConfigWhitespace   => "whitespace"
     case ResolveMissing        => "missing"
 
   def getString(path: String): String = requirePath(path) match
@@ -67,6 +71,25 @@ final case class Config(root: ConfigObject):
     case o: ConfigObject => Config(o)
     case other           => throw WrongTypeException(path, "an object", typeName(other))
 
+  /** The duration at `path`, written HOCON-style (`10s`, `5 minutes`, `500ms`); a bare number is read
+    * as milliseconds. Returns a cross-platform [[scala.concurrent.duration.FiniteDuration]].
+    */
+  def getDuration(path: String): FiniteDuration =
+    val s = stringForUnit(path, "a duration")
+    Units.parseDuration(s).getOrElse(throw WrongTypeException(path, "a duration", s"string '$s'"))
+
+  /** The size in bytes at `path`, written HOCON-style (`512K`, `10MB`, `1 GiB`); a bare number is a
+    * byte count. Powers-of-1024 and powers-of-1000 units are distinguished per the spec.
+    */
+  def getBytes(path: String): Long =
+    val s = stringForUnit(path, "a size")
+    Units.parseBytes(s).getOrElse(throw WrongTypeException(path, "a size", s"string '$s'"))
+
+  private def stringForUnit(path: String, expected: String): String = requirePath(path) match
+    case ConfigString(s) => s
+    case ConfigNumber(r) => r
+    case other           => throw WrongTypeException(path, expected, typeName(other))
+
   def getValue(path: String): ConfigValue = requirePath(path)
 
   def getList(path: String): List[ConfigValue] = requirePath(path) match
@@ -88,6 +111,9 @@ final case class Config(root: ConfigObject):
   def getConfigOpt(path: String): Option[Config]   = if hasPath(path) then Some(getConfig(path)) else None
   def getListOpt(path: String): Option[List[ConfigValue]] =
     if hasPath(path) then Some(getList(path)) else None
+  def getDurationOpt(path: String): Option[FiniteDuration] =
+    if hasPath(path) then Some(getDuration(path)) else None
+  def getBytesOpt(path: String): Option[Long] = if hasPath(path) then Some(getBytes(path)) else None
 
   /** This config overriding `fallback`: values here win, `fallback` fills in keys this config lacks.
     * Objects present in both merge recursively; arrays and scalars from this config replace.

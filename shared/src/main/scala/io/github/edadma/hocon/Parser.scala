@@ -8,11 +8,10 @@ import Token.*
   *
   * The grammar handled here is the i18n-usable core of HOCON: an optional set of root braces,
   * `=`/`:` separators (or none before a `{`), newline-or-comma separated fields with optional
-  * trailing commas, arrays, quoted and unquoted scalar values, and path-expression keys
-  * (`a.b.c = v`) that expand into nested objects. Within a single document, a key that recurs with
-  * an object value deep-merges; any other recurrence replaces. Whitespace-aware value concatenation,
-  * substitutions, durations and includes are later phases — an unquoted value is read to its
-  * terminator and trimmed.
+  * trailing commas, arrays, quoted and unquoted scalar values, path-expression keys
+  * (`a.b.c = v`) that expand into nested objects, substitutions, and whitespace-aware value
+  * concatenation. Within a single document, a key that recurs with an object value deep-merges; any
+  * other recurrence replaces. Includes remain a later phase.
   */
 final class Parser(tokens: Vector[Tok]):
 
@@ -90,18 +89,35 @@ final class Parser(tokens: Vector[Tok]):
         parts
       case _ => error("expected a key")
 
+  /** Parse a value, which may be a whitespace-separated concatenation of pieces. Each piece is an
+    * object, an array, a quoted/unquoted scalar, or a substitution; interior whitespace is captured
+    * so a string concatenation can preserve it, and leading/trailing whitespace is trimmed. A single
+    * piece is returned bare; two or more become a [[ConfigConcat]] for the resolver to collapse.
+    */
   private def parseValue(): ConfigValue =
     skipWs()
-    tk match
-      case LBrace =>
-        idx += 1
-        val o = parseObjectBody(braced = true)
-        if tk != RBrace then error("expected '}'")
-        idx += 1
-        o
-      case LBracket                                => parseArray()
-      case Newline | Comma | RBrace | RBracket | EOF => ConfigString("")
-      case _                                       => parseSimpleValue()
+    val parts    = mutable.ArrayBuffer.empty[ConfigValue]
+    var continue = true
+    while continue do
+      tk match
+        case Newline | Comma | RBrace | RBracket | EOF => continue = false
+        case Whitespace(w)                             => idx += 1; parts += ConfigWhitespace(w)
+        case LBrace =>
+          idx += 1
+          val o = parseObjectBody(braced = true)
+          if tk != RBrace then error("expected '}'")
+          idx += 1
+          parts += o
+        case LBracket      => parts += parseArray()
+        case Quoted(v)     => idx += 1; parts += ConfigString(v)
+        case Subst(p, opt) => idx += 1; parts += ConfigSubstitution(p, opt)
+        case Unquoted(t)   => idx += 1; parts += classify(t)
+        case _             => error("unexpected token in value")
+    val trimmed = parts.toList.dropWhile(isWhitespacePart).reverse.dropWhile(isWhitespacePart).reverse
+    trimmed match
+      case Nil           => ConfigString("")
+      case single :: Nil => single
+      case many          => ConfigConcat(many)
 
   private def parseArray(): ConfigArray =
     idx += 1 // consume '['
@@ -115,39 +131,9 @@ final class Parser(tokens: Vector[Tok]):
         case _        => elems += parseValue()
     ConfigArray(elems.result())
 
-  private def isWsTok(t: Token): Boolean = t match
-    case Whitespace(_) => true
-    case _             => false
-
-  private def isSubstTok(t: Token): Boolean = t match
-    case Subst(_, _) => true
-    case _           => false
-
-  /** Collect a scalar value's tokens up to the next terminator, then classify the trimmed text. A
-    * lone quoted string keeps its exact contents; anything else is trimmed and read as
-    * true/false/null, a number, or an unquoted string.
-    */
-  private def parseSimpleValue(): ConfigValue =
-    val collected = mutable.ArrayBuffer.empty[Token]
-    var continue  = true
-    while continue do
-      tk match
-        case Newline | Comma | RBrace | RBracket | LBrace | LBracket | EOF => continue = false
-        case other => collected += other; idx += 1
-    val trimmed = collected.dropWhile(isWsTok).toList.reverse.dropWhile(isWsTok).reverse
-    trimmed match
-      case Subst(p, opt) :: Nil => ConfigSubstitution(p, opt)
-      case Quoted(v) :: Nil     => ConfigString(v)
-      case _ =>
-        if trimmed.exists(isSubstTok) then
-          error("value concatenation with substitutions is not yet supported")
-        val raw = trimmed.map {
-          case Unquoted(t)   => t
-          case Whitespace(w) => w
-          case Quoted(v)     => v
-          case _             => ""
-        }.mkString
-        classify(raw)
+  private def isWhitespacePart(v: ConfigValue): Boolean = v match
+    case _: ConfigWhitespace => true
+    case _                   => false
 
   private def classify(raw: String): ConfigValue = raw match
     case "true"                       => ConfigBoolean(true)

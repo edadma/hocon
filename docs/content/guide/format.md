@@ -148,16 +148,51 @@ url  = ${host}        # → "localhost"
 See the [substitutions guide](/guide/substitutions/) for the full rules — environment
 fallback, object copying, and cycle detection.
 
+## Value concatenation
+
+Several pieces written on one line with only whitespace between them concatenate into a single
+value. Strings, numbers, booleans, and substitutions join into one string, with the interior
+whitespace preserved and the ends trimmed:
+
+```hocon
+host = example.com
+port = 8080
+url  = "http://"${host}":"${port}   # → "http://example.com:8080"
+full = first   middle  last         # → "first   middle  last"
+```
+
+Arrays concatenate element-wise, and objects deep-merge left to right:
+
+```hocon
+xs   = [1, 2] [3, 4]                 # → [1, 2, 3, 4]
+conf = ${defaults} { retries = 5 }   # the defaults object with retries overridden
+```
+
+Mixing kinds that cannot combine — an object or array joined with a string — raises a
+`HoconConcatException`.
+
+## Durations and sizes
+
+A value can be read as a time duration or a memory size with the dedicated getters; in the
+source it is just a number with a unit suffix (an optional space is allowed):
+
+```hocon
+timeout   = 10s
+poll      = 500ms
+linger    = 5 minutes
+cache     = 512K
+max-upload = 10MB
+```
+
+`getDuration` returns a cross-platform `FiniteDuration`; `getBytes` returns a `Long`. Duration
+units are `ns`, `us`, `ms`, `s`, `m`, `h`, `d` (and their long spellings), with a bare number
+read as milliseconds. Size units distinguish powers of 1024 (`K`, `Ki`, `KiB`, …) from powers of
+1000 (`kB`, `MB`, …), with a bare number read as bytes. See the
+[`Config` reference](/reference/config/).
+
 ## Not yet supported
 
-These parts of the full HOCON spec are on the [roadmap](/guide/roadmap/) but not implemented
-yet:
-
-- **Value concatenation** — joining `a "b" ${c}` into one value. A scalar value today is a
-  single quoted string, a single substitution, or a bare run trimmed to its terminator;
-  mixing them raises a parse error.
-- **Durations and sizes** — `10s`, `512K`, `10MB` are parsed as plain strings for now.
-- **`include`** — pulling in other files.
+`include` directives — pulling in other files — are on the [roadmap](/guide/roadmap/).
 
 Because unquoted strings forbid `:` and `//` starts a comment, **URLs must be quoted**
 (`url = "https://example.com"`) — this matches the reference implementation.
