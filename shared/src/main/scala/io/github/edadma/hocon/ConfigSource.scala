@@ -32,9 +32,10 @@ object ConfigSource:
   def fromMap(resources: Map[String, String]): ConfigSource = (_, spec) => resources.get(spec)
 
   /** Reads include targets from the local filesystem through the cross-platform file API, so the same
-    * code serves the JVM, Scala.js (Node), and Scala Native. Only the [[IncludeKind.File]] and bare
-    * [[IncludeKind.Heuristic]] forms are honoured here; [[IncludeKind.Url]] and [[IncludeKind.Classpath]]
-    * resolve to `None`, and the JVM default layers those on top.
+    * code serves the JVM, Scala.js (Node), and Scala Native identically. The [[IncludeKind.File]] and
+    * bare [[IncludeKind.Heuristic]] forms are honoured; [[IncludeKind.Url]] and [[IncludeKind.Classpath]]
+    * resolve to `None`, since neither has a portable meaning — supply a [[ConfigSource.fromMap]] or a
+    * custom source to serve those qualifiers.
     */
   val files: ConfigSource = (kind, spec) =>
     kind match
@@ -42,7 +43,8 @@ object ConfigSource:
         if readableFile(spec) then Try(readFile(spec)).toOption else None
       case _ => None
 
-  /** The platform's real source: files (and, on the JVM, the classpath and URLs). On Scala.js and
-    * Scala Native only file access is available; the other kinds resolve to `None`.
+  /** The default real source — filesystem includes, identical on every platform. It is exactly
+    * [[files]]: `url(...)` and `classpath(...)` qualifiers are recognised everywhere but not served by
+    * the default (they have no cross-platform meaning); pass a [[fromMap]] or custom source for those.
     */
-  def default: ConfigSource = platformConfigSource
+  def default: ConfigSource = files

@@ -139,7 +139,7 @@ missing target. Where includes are read from is the one platform-specific corner
 ```scala
 import io.github.edadma.hocon.*
 
-// Read files (and, on the JVM, the classpath and URLs) with the platform default source:
+// Read files with the platform default source (identical on every platform):
 val config = Hocon.parse("""include "app.conf"""", ConfigSource.default)
 
 // Or resolve includes from memory — identical on every platform, ideal for tests:

@@ -27,7 +27,8 @@ for the real process environment, or implement the single-method trait yourself.
 `ConfigSource` is the seam `include` directives use to read other documents. The default is
 `ConfigSource.empty` (no IO — optional includes are skipped, a `required(...)` one raises);
 `ConfigSource.fromMap(...)` resolves includes from an in-memory map, and `ConfigSource.default`
-reads the filesystem on every platform plus the classpath and URLs on the JVM. See the
+reads the filesystem identically on every platform. `url(...)` and `classpath(...)` qualifiers
+are recognised but not served by the default — pass a custom source for those. See the
 [format guide](/guide/format/#includes).
 
 ```scala

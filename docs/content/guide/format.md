@@ -251,11 +251,13 @@ include url("https://example.com/shared.conf")
 include required("must-exist.conf")
 ```
 
-Where an include can be read from is the one platform-specific corner of the library: it goes
-through a [`ConfigSource`](/reference/config/) that you pass to `Hocon.parse`. The default
-source reads files on every platform, plus the classpath and URLs on the JVM. A missing
-optional include is ignored; a missing `required(...)` one raises `IncludeException`, as does a
-cycle of files that include each other.
+Where an include is read from goes through a [`ConfigSource`](/reference/config/) you pass to
+`Hocon.parse`. The default source reads **files**, identically on every platform (it uses the
+cross-platform file API). The `file(...)` and `required(...)` qualifiers are honoured by the
+default; `url(...)` and `classpath(...)` are recognised but have no portable meaning, so the
+default does not serve them — supply a `ConfigSource.fromMap` or your own `ConfigSource` to
+resolve those. A missing optional include is ignored; a missing `required(...)` one raises
+`IncludeException`, as does a cycle of files that include each other.
 
 Because unquoted strings forbid `:` and `//` starts a comment, **URLs must be quoted**
 (`url = "https://example.com"`) — this matches the reference implementation.

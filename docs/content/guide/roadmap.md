@@ -38,10 +38,12 @@ eventual oracle.
 A few corners of the spec that are rarely used in configuration (and especially in i18n) files
 are deliberately scoped out:
 
-- **JVM-runtime conformance fixtures** — system-property substitution and the precise
-  classpath/URL `include` semantics of the reference implementation are JVM-only behaviours and
-  outside a pure-format parser. Memory-backed includes and environment fallback cover the
-  cross-platform equivalents.
+- **JVM-runtime conformance fixtures** — system-property substitution and the classpath/URL
+  `include` semantics of the reference implementation are JVM-only behaviours with no portable
+  meaning, so they are not built into the default source. The `url(...)`/`classpath(...)`
+  qualifiers still parse on every platform; serve them with a custom `ConfigSource` if you need
+  them. Filesystem includes, memory-backed includes, and environment fallback are the
+  cross-platform equivalents, identical everywhere.
 - **The dotted-string getter API** (`config.getString("a.b")`) splits every `.` as a path
   separator, so a key that itself contains a literal dot — written `"a.b" = …` or
   `foo."bar.baz" = …` — is reachable through the parsed structure but not addressable by that

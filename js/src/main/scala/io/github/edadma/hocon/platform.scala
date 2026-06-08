@@ -13,8 +13,3 @@ private[hocon] def platformEnvSource: EnvSource = name =>
     val v = js.Dynamic.global.process.env.selectDynamic(name)
     if js.isUndefined(v) || v == null then None else Some(v.asInstanceOf[String])
   }.toOption.flatten
-
-/** The Node include source: file access through the cross-platform file API. Classpath and URL kinds
-  * resolve to `None`.
-  */
-private[hocon] def platformConfigSource: ConfigSource = ConfigSource.files
