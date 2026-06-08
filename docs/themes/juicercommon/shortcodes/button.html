@@ -1,0 +1,9 @@
+{{ if .primary }}
+<a href="{{ if .href }}{{ .href }}{{ end }}" class="juicer-btn juicer-btn-primary">
+  {{ if .icon }}<span>{{ .icon }}</span>{{ end }}{{ head .args }}
+</a>
+{{ else }}
+<a href="{{ if .href }}{{ .href }}{{ end }}" class="juicer-btn juicer-btn-secondary">
+  {{ if .icon }}<span>{{ .icon }}</span>{{ end }}{{ head .args }}
+</a>
+{{ end }}

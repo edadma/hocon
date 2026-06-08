@@ -1,0 +1,248 @@
+/* ============================================================
+ * 9. Hero / cards / buttons
+ * ============================================================ */
+
+.juicerdocs-hero {
+  position: relative;
+  padding: 3.5rem 1rem 2rem;
+  margin: 0 -1rem;
+  overflow: hidden;
+}
+.juicerdocs-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(800px 400px at 20% 0%,  var(--brand-soft), transparent 60%),
+    radial-gradient(600px 300px at 90% 30%, rgb(from var(--accent) r g b / 0.10), transparent 60%);
+  z-index: -1;
+}
+
+.juicerdocs-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+/* `width: auto` + `max-width` (and the symmetric height pair) lets the
+   logo render at its natural aspect ratio, capped at the layout's
+   intended box size. A square source still fills the whole 3.5rem
+   square; a non-square source stops being stretched. The splash hero
+   below overrides the cap. */
+.juicerdocs-hero-logo {
+  width: auto;
+  max-width: 3.5rem;
+  height: auto;
+  max-height: 3.5rem;
+}
+.juicerdocs-hero-version {
+  font-size: 0.875rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+.juicerdocs-hero-title {
+  margin: 0;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+  color: var(--fg);
+}
+
+.juicerdocs-grad {
+  background: linear-gradient(135deg, var(--brand), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.juicerdocs-hero-summary {
+  max-width: 42rem;
+  margin: 1rem 0 0 0;
+  font-size: 1.125rem;
+  color: var(--fg-soft);
+  line-height: 1.6;
+}
+/* markdownify emits the summary text wrapped in its own <p>; reset
+   browser defaults so the visual rhythm matches the old plain-text
+   version. */
+.juicerdocs-hero-summary p { margin: 0; }
+.juicerdocs-hero-summary p + p { margin-top: 0.6em; }
+
+.juicerdocs-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.juicerdocs-cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+  margin-top: 3rem;
+}
+@media (min-width: 768px) {
+  .juicerdocs-cards { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 1024px) {
+  .juicerdocs-cards { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+.juicerdocs-card {
+  display: block;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--fg);
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.juicerdocs-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  text-decoration: none;
+}
+.juicerdocs-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: var(--brand-soft);
+  color: var(--brand);
+  margin-bottom: 0.75rem;
+}
+.juicerdocs-card-icon svg { width: 1.25rem; height: 1.25rem; }
+.juicerdocs-card-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--fg);
+}
+.juicerdocs-card-summary {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Splash layout — frontmatter `splash: true` (set on `_index.md` for
+   the landing page) tells `baseof.html` to render without sidebar +
+   rail. The content column then expands and the hero centers
+   itself, Starlight-style. Everything else in the splash flow
+   (cards, custom markdown body) inherits the wider gutter. */
+.juicerdocs-page-splash .juicerdocs-content {
+  max-width: 64rem;
+}
+.juicerdocs-page-splash .juicerdocs-hero {
+  text-align: center;
+  padding-top: 5rem;
+  padding-bottom: 3rem;
+}
+/* Splash hero stacks the logo above the version label, centered. */
+.juicerdocs-page-splash .juicerdocs-hero-meta {
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+/* Splash hero logo cap matches Starlight's hero-logo scale; same
+   natural-aspect treatment as the non-splash rule above. */
+.juicerdocs-page-splash .juicerdocs-hero-logo {
+  width: auto;
+  max-width: 28rem;
+  height: auto;
+  max-height: 28rem;
+}
+.juicerdocs-page-splash .juicerdocs-hero-summary {
+  margin-left: auto;
+  margin-right: auto;
+}
+.juicerdocs-page-splash .juicerdocs-hero-actions {
+  justify-content: center;
+}
+@media (min-width: 1024px) {
+  .juicerdocs-page-splash .juicerdocs-cards { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+.juicerdocs-section-heading {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 3rem 0 1rem;
+  color: var(--fg);
+}
+
+.juicerdocs-page-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.juicerdocs-page-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.375rem 0;
+}
+.juicerdocs-page-list a {
+  color: var(--brand);
+  font-weight: 500;
+}
+.juicerdocs-page-list-summary {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.juicer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.05s;
+  cursor: pointer;
+}
+.juicer-btn:hover { text-decoration: none; }
+.juicer-btn:active { transform: translateY(1px); }
+.juicer-btn svg { width: 1rem; height: 1rem; }
+
+.juicer-btn-primary {
+  background: var(--brand);
+  color: #ffffff;
+}
+.juicer-btn-primary:hover {
+  background: var(--brand-strong);
+  color: #ffffff;
+}
+[data-theme="dark"] .juicer-btn-primary { color: #0a0a0a; }
+[data-theme="dark"] .juicer-btn-primary:hover { color: #0a0a0a; }
+
+.juicer-btn-secondary {
+  background: var(--surface);
+  color: var(--fg);
+  border-color: var(--border);
+}
+.juicer-btn-secondary:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.juicerdocs-lead {
+  font-size: 1.125rem;
+  color: var(--fg-soft);
+  margin: 0 0 2rem 0;
+  line-height: 1.6;
+}
+/* Lead is now a <div> wrapping markdownify output. The inner <p>s carry
+ * their default margins, which would double-up against the lead's own
+ * bottom margin; flatten them so the lead reads as a single block of
+ * text the way it did when it was a plain <p>. */
+.juicerdocs-lead p { margin: 0; }
+.juicerdocs-lead p + p { margin-top: 0.6em; }

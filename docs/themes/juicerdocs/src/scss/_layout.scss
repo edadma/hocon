@@ -1,0 +1,96 @@
+/* ============================================================
+ * 4. Layout
+ * ============================================================ */
+
+.juicerdocs-page {
+  display: flex;
+  max-width: var(--site-max);
+  margin: 0 auto;
+}
+
+.juicerdocs-main {
+  flex: 1;
+  min-width: 0;
+  padding: 2rem 1rem;
+}
+
+.juicerdocs-content {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+.juicerdocs-sidebar-aside,
+.juicerdocs-rail-aside {
+  flex-shrink: 0;
+  position: sticky;
+  top: var(--topbar-h);
+  align-self: flex-start;
+  max-height: calc(100vh - var(--topbar-h));
+  overflow-y: auto;
+  padding: 2rem 1rem;
+}
+
+.juicerdocs-sidebar-aside {
+  width: var(--sidebar-w);
+  border-right: 1px solid var(--border);
+}
+
+.juicerdocs-rail-aside {
+  width: var(--rail-w);
+}
+
+/* Sidebar / rail / content scrollbars — keep them visually quiet so the
+   side columns feel like ambient navigation and so a long horizontal code
+   block doesn't grow a chunky OS-default scrollbar across the bottom.
+   Firefox uses the standard `scrollbar-*` properties; Chromium/Safari use
+   the ::-webkit-scrollbar pseudo-element. Both target `--border` for the
+   thumb, which is already token-aware so dark mode auto-dims.
+
+   Vertical: sidebar + rail (8px wide). Horizontal: every overflowing
+   content scroller — code blocks (<pre>), tables, the filetree shortcode,
+   anything else inside the prose column with `overflow-x: auto`. */
+.juicerdocs-sidebar-aside,
+.juicerdocs-rail-aside,
+.juicerdocs-content pre,
+.juicerdocs-content table,
+.juicerdocs-content .juicer-filetree {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.juicerdocs-sidebar-aside::-webkit-scrollbar,
+.juicerdocs-rail-aside::-webkit-scrollbar,
+.juicerdocs-content pre::-webkit-scrollbar,
+.juicerdocs-content table::-webkit-scrollbar,
+.juicerdocs-content .juicer-filetree::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.juicerdocs-sidebar-aside::-webkit-scrollbar-track,
+.juicerdocs-rail-aside::-webkit-scrollbar-track,
+.juicerdocs-content pre::-webkit-scrollbar-track,
+.juicerdocs-content table::-webkit-scrollbar-track,
+.juicerdocs-content .juicer-filetree::-webkit-scrollbar-track {
+  background: transparent;
+}
+.juicerdocs-sidebar-aside::-webkit-scrollbar-thumb,
+.juicerdocs-rail-aside::-webkit-scrollbar-thumb,
+.juicerdocs-content pre::-webkit-scrollbar-thumb,
+.juicerdocs-content table::-webkit-scrollbar-thumb,
+.juicerdocs-content .juicer-filetree::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+.juicerdocs-sidebar-aside::-webkit-scrollbar-thumb:hover,
+.juicerdocs-rail-aside::-webkit-scrollbar-thumb:hover,
+.juicerdocs-content pre::-webkit-scrollbar-thumb:hover,
+.juicerdocs-content table::-webkit-scrollbar-thumb:hover,
+.juicerdocs-content .juicer-filetree::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-soft);
+}
+
+@media (max-width: 1023px) {
+  .juicerdocs-sidebar-aside { display: none; }
+}
+@media (max-width: 1279px) {
+  .juicerdocs-rail-aside { display: none; }
+}

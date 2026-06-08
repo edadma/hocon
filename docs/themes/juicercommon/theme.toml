@@ -1,0 +1,10 @@
+# juicercommon — the shared base theme.
+#
+# Every bundled juicer theme declares `inherits = ["juicercommon"]`, which
+# splices this theme onto the end of the lookup chain. Partials, shortcodes,
+# and scripts that are identical across themes live here once; a theme that
+# needs a different version simply ships its own copy, which wins because the
+# inheriting theme sits earlier in the chain (site files > theme > juicercommon).
+#
+# juicercommon inherits nothing — it is the root of the chain.
+inherits = []

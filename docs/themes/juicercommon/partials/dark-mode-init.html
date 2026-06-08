@@ -1,0 +1,16 @@
+<!-- Pre-paint theme resolver. Runs synchronously in <head> before the body
+     paints, so there is no flash of the wrong palette on a dark-mode reload.
+     Reads the persisted preference (set by `dark-mode-toggle`), falling back
+     to the OS `prefers-color-scheme`. The chosen value lands on
+     <html data-theme="dark|light">, which every theme's CSS keys off. -->
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem('juicer-theme');
+      var dark = stored
+        ? stored === 'dark'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    } catch (e) {}
+  })();
+</script>

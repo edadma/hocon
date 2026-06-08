@@ -1,0 +1,19 @@
+<!-- Wires every theme-toggle control on the page to flip <html data-theme>
+     and persist the choice under the shared 'juicer-theme' key, which
+     `dark-mode-init` reads before paint on the next load. Themes mark their
+     toggle button with `data-juicer-theme-toggle`; styling and icon markup
+     stay in each theme's own topbar/CSS. Safe with zero or many buttons. -->
+<script>
+  (function () {
+    var btns = document.querySelectorAll('[data-juicer-theme-toggle]');
+    if (!btns.length) return;
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var current = document.documentElement.getAttribute('data-theme');
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('juicer-theme', next); } catch (e) {}
+      });
+    });
+  })();
+</script>

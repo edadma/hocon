@@ -1,0 +1,27 @@
+/* ============================================================
+ * 14. Footer
+ * ============================================================ */
+
+.juicerdocs-footer {
+  margin-top: 4rem;
+  border-top: 1px solid var(--border);
+}
+.juicerdocs-footer-inner {
+  max-width: var(--site-max);
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+@media (min-width: 640px) {
+  .juicerdocs-footer-inner {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+.juicerdocs-footer p { margin: 0; }
+.juicerdocs-footer a { color: var(--brand); }
+.juicerdocs-footer a:hover { text-decoration: underline; }

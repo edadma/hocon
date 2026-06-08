@@ -1,0 +1,38 @@
+# Chaînes d'interface de juicerdocs — français.
+#
+# Traduction de référence pour le site de documentation de juicer. Les clés
+# absentes ici retombent sur i18n/en.toml (langue par défaut du thème).
+
+langname = "Français"
+
+# Barre supérieure
+search_label  = "Rechercher…"
+aria_search   = "Ouvrir la recherche"
+aria_sidebar  = "Afficher ou masquer la barre latérale"
+aria_theme    = "Changer de thème"
+aria_github   = "Dépôt GitHub"
+aria_language = "Langue"
+
+# Fenêtre de recherche
+search_title  = "Recherche"
+hint_navigate = "pour naviguer"
+hint_open     = "pour ouvrir"
+hint_close    = "pour fermer"
+
+# Pagination précédent / suivant
+nav_prev = "Précédent"
+nav_next = "Suivant"
+
+# Accueil et listes de sections
+hero_get_started = "Commencer"
+hero_star_github = "Star sur GitHub"
+cards_sections   = "Sections"
+cards_pages      = "Pages"
+
+# Pied de page
+footer_built_with = "Conçu avec"
+footer_theme      = "Thème :"
+
+# Page 404
+err_not_found = "Cette page n'existe pas sur ce site."
+err_back_home = "Retour à l'accueil"

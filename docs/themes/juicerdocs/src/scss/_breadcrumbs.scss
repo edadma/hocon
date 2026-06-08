@@ -1,0 +1,75 @@
+/* ============================================================
+ * 8. Breadcrumbs + prev/next
+ * ============================================================ */
+
+.juicerdocs-breadcrumbs {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+
+.juicerdocs-breadcrumbs ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+.juicerdocs-breadcrumbs li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.juicerdocs-breadcrumbs-link { color: inherit; }
+.juicerdocs-breadcrumbs-link:hover {
+  color: var(--brand);
+  text-decoration: none;
+}
+.juicerdocs-breadcrumbs-current {
+  color: var(--fg-soft);
+  font-weight: 500;
+}
+.juicerdocs-breadcrumbs-sep {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.juicerdocs-prevnext {
+  margin-top: 3rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.juicerdocs-prevnext-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  color: var(--fg);
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.juicerdocs-prevnext-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  text-decoration: none;
+}
+.juicerdocs-prevnext-card-next { text-align: right; }
+
+.juicerdocs-prevnext-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.juicerdocs-prevnext-title {
+  font-weight: 600;
+  color: var(--fg);
+  margin-top: 0.25rem;
+}

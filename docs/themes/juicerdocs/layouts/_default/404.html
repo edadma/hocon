@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="{{ .site.defaultLanguage }}">
+<head>
+  {{ partial 'head' . }}
+</head>
+<body class="juicerdocs-404">
+  <div class="juicerdocs-404-inner">
+    {{ if .site.juicerdocs.logo }}
+    <img src="{{ relURL .site.juicerdocs.logo }}" alt="" class="juicerdocs-404-logo" />
+    {{ end }}
+    <h1 class="juicerdocs-404-title">404</h1>
+    <p class="juicerdocs-404-msg">{{ i18n .site.defaultLanguage 'err_not_found' }}</p>
+    <a href="{{ relURL '/' }}" class="juicer-btn juicer-btn-primary">
+      {{ i18n .site.defaultLanguage 'err_back_home' }}
+    </a>
+  </div>
+</body>
+</html>

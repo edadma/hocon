@@ -1,0 +1,68 @@
+---
+title: "Installation"
+weight: 1
+---
+
+hocon is a pure-Scala library with no native dependencies, so there is nothing to install at
+the system level — just add it to your build.
+
+[= note =]
+hocon is in early development. The parser and the untyped `Config` API (Phases 1–2) are in
+place and tested on all three platforms; substitutions, includes, and a typed decoder are on
+the [roadmap](/guide/roadmap/). Until the first release is published to Maven Central you can
+build it from the repository checkout — see *From source* below.
+[= /note =]
+
+## Requirements
+
+- Scala 3
+- sbt
+- For Scala.js / Scala Native targets: the usual `sbt-scalajs` / `sbt-scala-native` plugins
+
+No `java.*` dependency is used in the core, and there are no native libraries to link.
+
+## Add the dependency
+
+hocon cross-publishes for the JVM, Scala.js, and Scala Native. Use the `%%%` operator so sbt
+picks the right artifact for each platform:
+
+```scala
+libraryDependencies += "io.github.edadma" %%% "hocon" % "0.0.1"
+```
+
+In a `crossProject` build the single line covers every target:
+
+```scala
+lazy val app = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .settings(
+    libraryDependencies += "io.github.edadma" %%% "hocon" % "0.0.1",
+  )
+```
+
+## From source
+
+While the library is pre-release, depend on it as a source dependency. Clone it next to your
+project:
+
+```bash
+git clone https://github.com/edadma/hocon.git
+```
+
+and reference the cross-built module by relative path in your `build.sbt`:
+
+```scala
+dependsOn(ProjectRef(file("../hocon"), "hocon"))
+```
+
+## Verify the setup
+
+hocon's own suite is pure Scala and runs headlessly on every platform:
+
+```bash
+sbt hoconJVM/test
+sbt hoconJS/test
+sbt hoconNative/test
+```
+
+All three run the identical tests — that cross-platform parity is the whole point of the
+library. Continue to the [quick start](/getting-started/quick-start/) to parse a config.

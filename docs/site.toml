@@ -1,0 +1,54 @@
+# hocon documentation site — built with juicer, juicerdocs theme.
+#
+# Local preview:  cd /Users/ed/dev/juicer && sbt 'juicerJVM/run serve -s /Users/ed/dev/hocon/docs -L'
+# Build:          cd /Users/ed/dev/juicer && sbt 'juicerJVM/run build --source /Users/ed/dev/hocon/docs'
+
+title       = "hocon"
+author      = "Ed Maxedon"
+baseURL     = "https://hocon.edadma.dev/"
+description = "A pure-Scala, cross-platform (JVM / Scala.js / Scala Native) HOCON configuration parser — the config and i18n format from Lightbend's typesafe config, everywhere Scala runs."
+
+# Drives the topbar GitHub icon and the homepage hero "Star on GitHub" button.
+repoURL = "https://github.com/edadma/hocon"
+
+theme = "juicerdocs"
+
+# The page <h1> comes from frontmatter title — markdown headings start at h2.
+headingShift = 0
+
+# Static hosts serve the on-disk layout literally, so the URL space must match
+# the file tree. Force htmlDir off so URLs and paths agree on deploy.
+htmlDir = ""
+
+# Recompile the theme CSS from SCSS and bundle/minify the theme JS on every build
+# (fingerprinted for cache-busting). Degrades to a verbatim copy when sass/esbuild
+# aren't on PATH, so the page still renders.
+[assets]
+enabled     = true
+fingerprint = true
+
+[[assets.sass]]
+input  = "themes/juicerdocs/src/scss/juicerdocs.scss"
+output = "/juicerdocs.css"
+minify = true
+
+[[assets.esbuild]]
+input  = "themes/juicerdocs/static/juicerdocs.js"
+output = "/juicerdocs.js"
+minify = true
+
+[juicerdocs]
+version    = "v0.0.1"
+getStarted = true
+
+# Indigo/blue palette (distinct from suit's violet, sdl3's amber, riposte's teal).
+brand           = "#1c7ed6"        # blue-7 — links, button fills, hero gradient start
+brandStrong     = "#1971c2"        # blue-8 — hover state
+brandSoft       = "#d0ebff"        # blue-1 — soft tint: sidebar hover, badges
+accent          = "#4dabf7"        # blue-4 — hero gradient end, decorative highlights
+
+# Dark-mode overrides (lighter, as dark surfaces need more luminance).
+brandDark       = "#74c0fc"        # blue-3
+brandStrongDark = "#a5d8ff"        # blue-2
+brandSoftDark   = "rgb(28 126 214 / .18)"
+accentDark      = "#4dabf7"        # blue-4

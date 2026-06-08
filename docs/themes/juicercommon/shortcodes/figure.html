@@ -1,0 +1,42 @@
+{{ // figure shortcode — emit a responsive <picture> wrapped in a
+   // <figure>, optionally with a caption.
+   //
+   // Usage in markdown content:
+   //
+   //   [= figure src="/img/diagram.jpg" alt="A diagram" caption="The diagram, in colour." /=]
+   //
+   // Args:
+   //   src     — image path (required; also accepts positional first arg)
+   //   alt     — alt text
+   //   caption — caption shown under the image
+   //   sizes   — `sizes` attribute for srcset, default "(min-width: 56rem) 56rem, 100vw"
+   //
+   // When `[images] enabled = true` is set in site.toml AND ImageMagick
+   // is on PATH, the shortcode generates webp + original variants at
+   // the configured widths and emits the responsive <picture> markup.
+   // Otherwise it degrades cleanly to a plain <img> (still with
+   // width/height attributes so layout-shift is pinned). }}
+{{ src := if .src then .src else (head .args) }}
+{{ alt := if .alt then .alt else (if .caption then .caption else '') }}
+{{ sizes := if .sizes then .sizes else '(min-width: 56rem) 56rem, 100vw' }}
+{{ v := imageVariants src }}
+{{ webp := srcset src 'webp' }}
+{{ orig := srcset src 'original' }}
+<figure class="juicer-figure">
+  {{ if v.variants }}
+  <picture>
+    {{ if webp }}<source srcset="{{ webp }}" type="image/webp" sizes="{{ sizes }}" />{{ end }}
+    <img src="{{ v.original }}"
+         {{ if orig }}srcset="{{ orig }}" sizes="{{ sizes }}"{{ end }}
+         {{ if v.originalWidth }}width="{{ v.originalWidth }}" height="{{ v.originalHeight }}"{{ end }}
+         alt="{{ alt }}"
+         loading="lazy" decoding="async" />
+  </picture>
+  {{ else }}
+  <img src="{{ v.original }}"
+       {{ if v.originalWidth }}width="{{ v.originalWidth }}" height="{{ v.originalHeight }}"{{ end }}
+       alt="{{ alt }}"
+       loading="lazy" decoding="async" />
+  {{ end }}
+  {{ if .caption }}<figcaption>{{ .caption }}</figcaption>{{ end }}
+</figure>

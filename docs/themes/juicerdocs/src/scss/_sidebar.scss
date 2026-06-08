@@ -1,0 +1,87 @@
+/* ============================================================
+ * 6. Sidebar
+ * ============================================================ */
+
+.juicerdocs-nav {
+  font-size: 0.875rem;
+}
+
+.juicerdocs-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.juicerdocs-nav-section {
+  margin-bottom: 1.25rem;
+}
+
+.juicerdocs-nav-heading {
+  display: block;
+  padding: 0.375rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+}
+.juicerdocs-nav-heading:hover {
+  color: var(--brand);
+  text-decoration: none;
+}
+/* Section heading is the active link when the user is on the
+   section's `_index` page. Mirrors the .juicerdocs-nav-link.is-active
+   colour treatment (without the border-left accent, since the heading
+   sits outside the bordered child list). */
+.juicerdocs-nav-heading.is-active {
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.juicerdocs-nav-children {
+  list-style: none;
+  margin: 0.25rem 0 0 0;
+  padding: 0;
+  border-left: 1px solid var(--border-soft);
+}
+
+/* Nested levels indent further than their parent — one step per depth.
+   The descendant combinator compounds: depth 2 indents 0.75rem, depth 3
+   indents 1.5rem, depth 4 indents 2.25rem, etc. so the visual hierarchy
+   scales with the content tree no matter how deep it goes. */
+.juicerdocs-nav-children .juicerdocs-nav-children {
+  margin-left: 0.75rem;
+}
+
+.juicerdocs-nav-link {
+  display: block;
+  padding: 0.375rem 0.75rem;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  color: var(--fg-soft);
+  text-decoration: none;
+  transition: color 0.1s, background 0.1s, border-color 0.1s;
+}
+.juicerdocs-nav-link:hover {
+  color: var(--brand);
+  background: var(--brand-soft);
+  text-decoration: none;
+}
+.juicerdocs-nav-link.is-active {
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-left-color: var(--brand);
+  font-weight: 500;
+}
+
+/* Intermediate-section links (those that wrap a subsection in the
+   content tree) get a slightly heavier weight + the full fg color, so
+   the eye reads them as group headings rather than leaves. The base
+   .juicerdocs-nav-link styles still apply for layout + hover + active. */
+.juicerdocs-nav-link-section {
+  color: var(--fg);
+  font-weight: 500;
+}

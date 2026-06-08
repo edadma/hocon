@@ -1,0 +1,36 @@
+// juicerdocs — entry point for the documentation theme stylesheet.
+//
+// This is the only file site builds compile. Each `@use` pulls in one
+// partial whose CSS rules are emitted in the order they appear here.
+// Partials contain no SCSS variables or mixins — they're plain CSS
+// grouped by concern, so cascade ordering matches the partial order.
+//
+// Authoring rules:
+//   - Add new rules to the partial whose concern they fit. If no
+//     partial fits, add a new partial and `@use` it here at the
+//     appropriate cascade point.
+//   - Don't reorder existing `@use` lines without auditing for
+//     specificity-driven rule interactions (see the typography
+//     section's notes on `> * + *` vs `p { margin: 0 }` order).
+//   - The compiled output lives at `themes/juicerdocs/static/juicerdocs.css`
+//     and ships with the theme. Sites without `sass` on PATH still get a
+//     working theme; sites with the asset pipeline configured (see
+//     juicer docs → [assets]) recompile from these sources and can
+//     fingerprint the output for cache-busting deploys.
+
+@use 'reset';
+@use 'tokens';
+@use 'helpers';
+@use 'layout';
+@use 'topbar';
+@use 'sidebar';
+@use 'rail';
+@use 'breadcrumbs';
+@use 'hero';
+@use 'typography';
+@use 'syntax';
+@use 'shortcodes';
+@use 'js-state';
+@use 'not-found';
+@use 'footer';
+@use 'misc';

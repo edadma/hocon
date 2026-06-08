@@ -1,0 +1,69 @@
+/* ============================================================
+   Syntax highlighting
+   ============================================================
+   Server-side via the `highlighter` lib (TextMate grammars). When juicer
+   sees a `<src>/grammars/<lang>.tmLanguage.json`, it parses each one
+   once, wires markdown's `codeHighlighter` callback, and emits
+   `<span class="hl-keyword">…</span>` etc. inside the existing
+   `<pre><code>`. The theme owns the colors via these classes; sites
+   without a grammars/ dir get plain `<pre><code>` and these styles
+   are inert.
+
+   Palette lives in juicerdocs's magenta/purple/leaf color space —
+   keywords carry the brand magenta, strings stay leaf-green, types
+   pick up the accent violet so the page reads as one piece. Dark-mode
+   swaps to lighter, slightly cooler tones so the accents don't burn
+   against the deep code background. */
+.juicerdocs-content .hl-keyword     { color: #a30d57; font-weight: 600; }
+.juicerdocs-content .hl-string      { color: #4d7c0f; }
+.juicerdocs-content .hl-comment     { color: #71717a; font-style: italic; }
+.juicerdocs-content .hl-number      { color: #b91c1c; }
+.juicerdocs-content .hl-type        { color: #6f1f9e; }
+.juicerdocs-content .hl-function    { color: #1d4ed8; }
+.juicerdocs-content .hl-variable    { color: inherit; }
+.juicerdocs-content .hl-operator    { color: #52525b; }
+.juicerdocs-content .hl-punctuation { color: #71717a; }
+
+[data-theme="dark"] .juicerdocs-content .hl-keyword     { color: #f472b6; }
+[data-theme="dark"] .juicerdocs-content .hl-string      { color: #a3e635; }
+[data-theme="dark"] .juicerdocs-content .hl-comment     { color: #a1a1aa; }
+[data-theme="dark"] .juicerdocs-content .hl-number      { color: #fb7185; }
+[data-theme="dark"] .juicerdocs-content .hl-type        { color: #c084fc; }
+[data-theme="dark"] .juicerdocs-content .hl-function    { color: #93c5fd; }
+[data-theme="dark"] .juicerdocs-content .hl-operator    { color: #d4d4d8; }
+[data-theme="dark"] .juicerdocs-content .hl-punctuation { color: #a1a1aa; }
+
+/* Tables */
+.juicerdocs-content table {
+  width: 100%;
+  margin: 1.5rem 0;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.juicerdocs-content thead {
+  background: var(--surface);
+  border-top: 2px solid var(--brand);
+}
+.juicerdocs-content th {
+  text-align: left;
+  padding: 0.625rem 0.875rem;
+  font-weight: 600;
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
+}
+.juicerdocs-content td {
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--fg-soft);
+}
+.juicerdocs-content tbody tr:nth-child(even) { background: var(--bg-soft); }
+.juicerdocs-content tbody tr:hover { background: var(--brand-soft); }
+.juicerdocs-content tr:last-child td { border-bottom: 0; }
+
+/* Definition lists */
+.juicerdocs-content dl { margin: 1rem 0; }
+.juicerdocs-content dt { font-weight: 600; color: var(--fg); margin-top: 0.75rem; }
+.juicerdocs-content dd { margin-left: 1.5rem; color: var(--fg-soft); }

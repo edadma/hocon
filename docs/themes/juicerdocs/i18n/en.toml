@@ -1,0 +1,44 @@
+# juicerdocs chrome strings — English (the theme's default language).
+#
+# A site that activates juicerdocs inherits these automatically, so the
+# chrome renders in English with zero configuration. To translate the
+# chrome, drop an i18n/<lang>.toml into your SITE (it wins over this file
+# per key) and publish content under content/<lang>/. See i18n/fr.toml in
+# the juicer.build docs site for a worked example.
+
+# This language's own name, shown in the language switcher. The switcher
+# looks this up in each available language's table (`i18n t.lang 'langname'`),
+# so every translatable theme just needs to set it per dictionary.
+langname = "English"
+
+# Topbar
+search_label  = "Search…"
+aria_search   = "Open search"
+aria_sidebar  = "Toggle sidebar"
+aria_theme    = "Toggle theme"
+aria_github   = "GitHub repository"
+aria_language = "Language"
+
+# Search modal
+search_title  = "Search"
+hint_navigate = "to navigate"
+hint_open     = "to open"
+hint_close    = "to close"
+
+# Prev / next pager
+nav_prev = "Previous"
+nav_next = "Next"
+
+# Home hero + section listings
+hero_get_started = "Get started"
+hero_star_github = "Star on GitHub"
+cards_sections   = "Sections"
+cards_pages      = "Pages"
+
+# Footer
+footer_built_with = "Built with"
+footer_theme      = "Theme:"
+
+# 404 page
+err_not_found = "No such page on this site."
+err_back_home = "Back to home"

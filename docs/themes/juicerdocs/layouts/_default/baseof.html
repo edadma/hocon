@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="{{ if .page.lang then .page.lang else .site.defaultLanguage }}">
+<head>
+  {{ partial 'head' . }}
+</head>
+<body>
+  {{ partial 'topbar' . }}
+
+  {{ // Splash layout — drops the sidebar, the right-rail page-TOC,
+     // breadcrumbs, and the prev/next pager so the hero + cards take
+     // the full width. Modeled after Starlight's splash template.
+     //
+     // Defaults to TRUE on the root section index (root _index.md) so
+     // a fresh juicerdocs site gets the landing-page hero without
+     // remembering to add `splash: true` to frontmatter. Other pages
+     // default to FALSE.
+     //
+     // Set `splash: false` explicitly to opt OUT on the root, or
+     // `splash: true` to opt IN on a non-root page. }}
+  {{ if .page.splash or (.page.isSection and not .page.ancestors and .page.splash != false) }}
+  <div class="juicerdocs-page juicerdocs-page-splash">
+    <main class="juicerdocs-main">
+      <div class="juicerdocs-content">
+        {{ block main . }}
+          <article>
+            <h1>{{ .page.title }}</h1>
+            {{ .content }}
+          </article>
+        {{ end }}
+      </div>
+    </main>
+  </div>
+  {{ else }}
+  <div class="juicerdocs-page">
+    <aside class="juicerdocs-sidebar-aside">
+      {{ partial 'sidebar' . }}
+    </aside>
+    <div class="juicerdocs-sidebar-backdrop" aria-hidden="true"></div>
+
+    <main class="juicerdocs-main">
+      <div class="juicerdocs-content">
+        {{ partial 'breadcrumbs' . }}
+        {{ block main . }}
+          <article>
+            <h1>{{ .page.title }}</h1>
+            {{ .content }}
+          </article>
+        {{ end }}
+        {{ partial 'prev-next' . }}
+      </div>
+    </main>
+
+    <aside class="juicerdocs-rail-aside">
+      {{ partial 'page-toc' . }}
+    </aside>
+  </div>
+  {{ end }}
+
+  {{ partial 'footer' . }}
+
+  {{ partial 'search-modal' . }}
+
+  <script src="{{ relURL (asset 'juicerdocs.js') }}"></script>
+</body>
+</html>

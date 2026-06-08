@@ -1,0 +1,54 @@
+/* ============================================================
+ * 7. Right-rail TOC
+ * ============================================================ */
+
+.juicerdocs-toc-wrap {
+  font-size: 0.875rem;
+}
+
+.juicerdocs-toc-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.juicerdocs-toc {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 1px solid var(--border);
+}
+.juicerdocs-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.juicerdocs-toc-link {
+  display: block;
+  padding: 0.25rem 0;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  color: var(--muted);
+  text-decoration: none;
+  line-height: 1.4;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  transition: color 0.1s, border-color 0.1s;
+}
+.juicerdocs-toc-link:hover {
+  color: var(--fg);
+  text-decoration: none;
+}
+.juicerdocs-toc-link.is-active {
+  color: var(--brand);
+  border-left-color: var(--brand);
+  font-weight: 500;
+}
+.juicerdocs-toc-link[data-toc-level="2"] { padding-left: 0.75rem; }
+.juicerdocs-toc-link[data-toc-level="3"] { padding-left: 1.5rem; }
+.juicerdocs-toc-link[data-toc-level="4"] { padding-left: 2.25rem; font-size: 0.8125rem; }
+.juicerdocs-toc-link[data-toc-level="5"] { padding-left: 3rem;    font-size: 0.8125rem; }

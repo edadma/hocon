@@ -1,0 +1,8 @@
+<!-- hreflang alternates for the document <head>. Mirrors the sitemap's
+     alternates (App.scala): on a multilingual site every page advertises
+     itself plus each same-stem translation, so search engines serve the
+     right language. `.page.translations` is empty on single-language sites,
+     so this whole block collapses to nothing — no markup, no namespace. -->
+{{ if .page.translations }}<link rel="alternate" hreflang="{{ .page.lang }}" href="{{ .page.permalink }}">
+{{ for t <- .page.translations }}<link rel="alternate" hreflang="{{ t.lang }}" href="{{ t.permalink }}">
+{{ end }}{{ end }}

@@ -1,0 +1,30 @@
+/* ============================================================
+ * 13. 404
+ * ============================================================ */
+
+.juicerdocs-404 {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+.juicerdocs-404-inner { max-width: 24rem; }
+.juicerdocs-404-logo {
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto 1.5rem;
+  opacity: 0.9;
+}
+.juicerdocs-404-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+.juicerdocs-404-msg {
+  margin: 0 0 2rem 0;
+  font-size: 1.125rem;
+  color: var(--muted);
+}

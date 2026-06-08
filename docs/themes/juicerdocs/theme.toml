@@ -1,0 +1,4 @@
+# Inherit shared partials, shortcodes, and scripts from juicercommon.
+# Anything this theme ships under the same name wins over the inherited
+# copy (precedence: site files > this theme > juicercommon).
+inherits = ["juicercommon"]
