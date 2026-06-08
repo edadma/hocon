@@ -12,11 +12,11 @@ summary: Read HOCON config and i18n files the same way on the JVM, in the browse
 (Human-Optimized Config Object Notation) — the comfortable, JSON-superset config format
 popularized by Lightbend's `com.typesafe:config`.
 
-The reference implementation is excellent, but it is **JVM-only**: it reaches for
-`java.io`, the classpath, `java.util.regex`, and `java.time`. That leaves Scala.js and
-Scala Native with no good way to read a `.conf` file. hocon fills that gap — the parser and
-the untyped `Config` API are written in plain Scala 3 and live in a shared source set, so
-the **same code runs on all three platforms**.
+`com.typesafe:config` is **JVM-only** — it reaches for `java.io`, the classpath,
+`java.util.regex`, and `java.time` — which leaves Scala.js and Scala Native with no good way to
+read a `.conf` file. hocon fills that gap: the whole library is plain Scala 3 in a shared source
+set, with no `java.*` imports and no regex engine in its core, so the **same code runs on all
+three platforms**.
 
 ```scala
 import io.github.edadma.hocon.*
