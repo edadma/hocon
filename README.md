@@ -11,9 +11,10 @@ A pure-Scala, cross-platform implementation of [HOCON](https://github.com/lightb
 (Human-Optimized Config Object Notation) — the config format popularized by Lightbend's
 `com.typesafe:config`.
 
-Unlike `com.typesafe:config`, which is JVM-only, **hocon** is written in pure Scala 3 with no
-`java.*` dependencies in its core, so the same parser runs on the **JVM**, in the browser/Node.js
-via **Scala.js**, and as a native binary via **Scala Native**.
+Unlike `com.typesafe:config`, which is JVM-only, **hocon** is written in pure Scala 3 — no `java.*`
+imports and no regex engine in its core — so the same parser runs on the **JVM**, in the
+browser/Node.js via **Scala.js**, and as a native binary via **Scala Native**. The identical test
+suite runs on all three (`sbt test`).
 
 > **Status:** All seven roadmap phases complete — the lexer, parser, untyped `Config` API, object
 > merging, substitutions, value concatenation, durations/sizes, `include` directives, a typed
@@ -133,8 +134,8 @@ distinguish powers of 1024 (`K`, `Ki`, `KiB`) from powers of 1000 (`kB`, `MB`).
 
 `include "other.conf"` pulls another document in at that point, merging its fields so later fields
 override them. The qualified forms pin the lookup, and `required(...)` errors instead of skipping a
-missing target. Where includes are read from is the one platform-specific corner — it goes through a
-`ConfigSource` you pass to `parse`:
+missing target. Where includes are read from goes through a `ConfigSource` you pass to `parse`; the
+default reads files identically on every platform:
 
 ```scala
 import io.github.edadma.hocon.*
