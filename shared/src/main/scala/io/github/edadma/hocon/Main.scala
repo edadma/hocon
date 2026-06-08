@@ -1,4 +1,4 @@
 package io.github.edadma.hocon
 
-@main def run(args: String*): Unit =
+@main def run(): Unit =
   println(s"hocon - $platform")

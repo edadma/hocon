@@ -46,6 +46,8 @@ lazy val hocon = crossProject(JSPlatform, JVMPlatform, NativePlatform)
         "-deprecation",
         "-feature",
         "-unchecked",
+        "-Wunused:all",
+        "-Werror",
         "-language:postfixOps",
         "-language:implicitConversions",
         "-language:existentials",
