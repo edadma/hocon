@@ -42,13 +42,16 @@ final class Parser(
   private def skipWs(): Unit         = while isWs do idx += 1
   private def skipSeparators(): Unit = while isWs || tk == Newline || tk == Comma do idx += 1
 
-  /** Parse the whole input into an unresolved root object — substitution nodes are left in place for
-    * the resolver to eliminate.
+  /** Parse the whole input into an unresolved root value — substitution nodes are left in place for
+    * the resolver to eliminate. Per the HOCON spec a document's root may be an object or an array: a
+    * leading `[` opens an array root, an explicit `{` opens a braced object, and anything else is the
+    * common brace-less object body. `include` at the top level always means the document is an object.
     */
-  def parseRoot(): ConfigObject =
+  def parseRoot(): ConfigValue =
     skipSeparators()
-    val rootObj =
-      if tk == LBrace then
+    val root =
+      if tk == LBracket then parseArray()
+      else if tk == LBrace then
         idx += 1
         val o = parseObjectBody(braced = true)
         if tk != RBrace then error("expected '}'")
@@ -57,7 +60,7 @@ final class Parser(
       else parseObjectBody(braced = false)
     skipSeparators()
     if tk != EOF then error("unexpected token after configuration")
-    rootObj
+    root
 
   private def parseObjectBody(braced: Boolean): ConfigObject =
     var fields: Map[String, ConfigValue] = ListMap.empty
@@ -150,7 +153,10 @@ final class Parser(
     if includeStack.contains(spec) then
       throw IncludeException(s"circular include: ${(includeStack.toList :+ spec).mkString(" -> ")}")
     source.load(kind, spec) match
-      case Some(text) => Parser(Lexer(text).tokenize(), source, includeStack + spec).parseRoot()
+      case Some(text) =>
+        Parser(Lexer(text).tokenize(), source, includeStack + spec).parseRoot() match
+          case o: ConfigObject => o
+          case _               => throw IncludeException(s"included document is not an object: $spec")
       case None =>
         if required then throw IncludeException(s"required include not found: $spec")
         else ConfigObject.empty

@@ -118,6 +118,22 @@ val config = Hocon.parse("""
 config.getConfig("server").getStringList("ports")   // List("80", "443")
 ```
 
+### Array and object roots
+
+Per the HOCON spec a document's root may be an **object** or an **array**. `Hocon.parse` returns the
+path-addressable `Config` for the common object-rooted document. When the root may be a top-level
+array, use `Hocon.parseValue`, which returns the resolved root value (`ConfigObject` or
+`ConfigArray`) directly:
+
+```scala
+Hocon.parseValue("[1, 2, 3]")        // ConfigArray(List(ConfigNumber("1"), ...))
+Hocon.parseValue("a = 1")            // ConfigObject(...) — object roots work too
+Hocon.parse("[1, 2, 3]")             // throws WrongTypeException — Config needs an object root
+```
+
+`parseValue` takes the same optional `EnvSource` and `ConfigSource` seams as `parse`. Inside an array
+root there are no keys to look into, so only `${?...}` and environment fallbacks resolve.
+
 ### Durations and sizes
 
 Read unit-suffixed values with `getDuration` (a cross-platform `FiniteDuration`) and `getBytes`

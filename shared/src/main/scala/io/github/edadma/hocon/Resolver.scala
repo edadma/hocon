@@ -13,10 +13,14 @@ import scala.collection.immutable.ListMap
   */
 object Resolver:
 
-  def resolve(root: ConfigObject, env: EnvSource): ConfigObject =
-    resolveValue(root, root, env, Nil) match
-      case o: ConfigObject => o
-      case other           => other.asInstanceOf[ConfigObject] // root is always an object
+  /** Resolve a root that is either an object or an array (a HOCON document may be either). Path
+    * substitutions look up into the root only when it is an object; an array root exposes no keys, so
+    * inside one only `${?...}`/environment fallbacks resolve and a required `${path}` raises.
+    */
+  def resolve(root: ConfigValue, env: EnvSource): ConfigValue =
+    root match
+      case o: ConfigObject => resolveValue(o, o, env, Nil)
+      case other           => resolveValue(other, ConfigObject.empty, env, Nil)
 
   private def resolveValue(
       v: ConfigValue,

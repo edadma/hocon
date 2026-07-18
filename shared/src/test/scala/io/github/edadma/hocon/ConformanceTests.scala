@@ -227,3 +227,44 @@ class ConformanceTests extends AnyFreeSpec with Matchers:
       c.getDouble("x") shouldBe -2.5
     }
   }
+
+  "root value" - {
+    "a document may have an array root" in {
+      Hocon.parseValue("[1, 2, 3]") shouldBe
+        ConfigArray(List(ConfigNumber("1"), ConfigNumber("2"), ConfigNumber("3")))
+    }
+
+    "an array root allows newline separators and a trailing comma" in {
+      val v = Hocon.parseValue("""
+        [
+          a
+          b,
+        ]
+      """)
+      v shouldBe ConfigArray(List(ConfigString("a"), ConfigString("b")))
+    }
+
+    "an array root may hold objects" in {
+      Hocon.parseValue("""[ { x = 1 }, { x = 2 } ]""") shouldBe
+        ConfigArray(List(
+          ConfigObject(scala.collection.immutable.ListMap("x" -> ConfigNumber("1"))),
+          ConfigObject(scala.collection.immutable.ListMap("x" -> ConfigNumber("2"))),
+        ))
+    }
+
+    "substitutions resolve inside an array root" in {
+      // With no object root to look into, only the environment can satisfy a reference.
+      val env = EnvSource.fromMap(Map("host" -> "localhost"))
+      Hocon.parseValue("[ ${host}, ${?missing} ]", env) shouldBe
+        ConfigArray(List(ConfigString("localhost")))
+    }
+
+    "parseValue still returns an object for an object root" in {
+      Hocon.parseValue("a = 1") shouldBe
+        ConfigObject(scala.collection.immutable.ListMap("a" -> ConfigNumber("1")))
+    }
+
+    "parse rejects an array root with a clear type error" in {
+      an[WrongTypeException] should be thrownBy Hocon.parse("[1, 2, 3]")
+    }
+  }

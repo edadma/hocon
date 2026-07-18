@@ -140,11 +140,34 @@ object Hocon:
   def parse(input: String, source: ConfigSource): Config = parse(input, EnvSource.empty, source)
 
   /** Parse and resolve with both seams supplied: `env` for substitution fallback and `source` for
-    * `include` directives.
+    * `include` directives. The document's root must be an object (the usual case); parse a document
+    * whose root is an array with [[parseValue]] instead.
     */
   def parse(input: String, env: EnvSource, source: ConfigSource): Config =
+    parseValue(input, env, source) match
+      case o: ConfigObject => Config(o)
+      case other =>
+        throw WrongTypeException("", "an object at the document root", ConfigValue.typeName(other))
+
+  /** Parse and resolve a document, returning its root value directly. Per the HOCON spec the root may
+    * be an object or an array, and this is the entry point that accepts either — use it when the input
+    * is (or may be) a top-level array. For the common object-rooted document [[parse]] returns the
+    * more convenient path-addressable [[Config]].
+    */
+  def parseValue(input: String): ConfigValue = parseValue(input, EnvSource.empty, ConfigSource.empty)
+
+  /** Parse and resolve a document to its root value, falling back to `env` for substitutions. */
+  def parseValue(input: String, env: EnvSource): ConfigValue =
+    parseValue(input, env, ConfigSource.empty)
+
+  /** Parse and resolve a document to its root value, loading `include` directives through `source`. */
+  def parseValue(input: String, source: ConfigSource): ConfigValue =
+    parseValue(input, EnvSource.empty, source)
+
+  /** Parse and resolve a document to its root value with both seams supplied. */
+  def parseValue(input: String, env: EnvSource, source: ConfigSource): ConfigValue =
     val root = Parser(Lexer(input).tokenize(), source).parseRoot()
-    Config(Resolver.resolve(root, env))
+    Resolver.resolve(root, env)
 
   /** Merge configs so that later arguments win over earlier ones — i.e. pass the base first and the
     * most specific overrides last. With no arguments this is the empty config.
