@@ -28,7 +28,7 @@ hocon cross-publishes for the JVM, Scala.js, and Scala Native. Use the `%%%` ope
 picks the right artifact for each platform:
 
 ```scala
-libraryDependencies += "io.github.edadma" %%% "hocon" % "0.1.0"
+libraryDependencies += "io.github.edadma" %%% "hocon" % "0.1.1"
 ```
 
 In a `crossProject` build the single line covers every target:
@@ -36,7 +36,7 @@ In a `crossProject` build the single line covers every target:
 ```scala
 lazy val app = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(
-    libraryDependencies += "io.github.edadma" %%% "hocon" % "0.1.0",
+    libraryDependencies += "io.github.edadma" %%% "hocon" % "0.1.1",
   )
 ```
 

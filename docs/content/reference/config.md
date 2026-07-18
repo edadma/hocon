@@ -17,7 +17,14 @@ These live on the `Hocon` object.
 | `Hocon.parse(input: String, env: EnvSource)` | `Config` | As above, falling back to `env` for substitutions absent from the document. |
 | `Hocon.parse(input: String, source: ConfigSource)` | `Config` | As above, loading `include` directives through `source`. |
 | `Hocon.parse(input: String, env: EnvSource, source: ConfigSource)` | `Config` | Both seams supplied. |
+| `Hocon.parseValue(input: String)` | `ConfigValue` | Parse and resolve a document whose root may be an **object or an array**, returning the root value directly. Same optional `env`/`source` overloads as `parse`. |
 | `Hocon.load(configs: Config*)` | `Config` | Merge configs so that **later arguments win**. No arguments → the empty config. |
+
+Per the HOCON spec a document's root may be an object or an array. `Hocon.parse` returns the
+path-addressable `Config` and requires an object root — it raises `WrongTypeException` on a
+top-level array. When the input is (or may be) a top-level array, use `Hocon.parseValue`, which
+returns the resolved root `ConfigValue` (`ConfigObject` or `ConfigArray`). Inside an array root
+there are no keys to look into, so only `${?...}` and environment fallbacks resolve.
 
 `EnvSource` is the seam substitutions use for environment fallback. The default is
 `EnvSource.empty`; build one from a map with `EnvSource.fromMap(...)`, use `EnvSource.system`

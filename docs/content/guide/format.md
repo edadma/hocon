@@ -149,6 +149,11 @@ users = [
 ]
 ```
 
+A document's root may itself be an array — a file that begins with `[` is parsed as a top-level
+array rather than an object. Since a path-addressable `Config` is object-shaped, parse an
+array-rooted document with `Hocon.parseValue`, which returns the root `ConfigValue` directly; see
+the [`Config` reference](/reference/config/#parsing-and-combining).
+
 ## Substitutions
 
 `${path}` references another value, and `${?path}` is its optional form. They resolve against
