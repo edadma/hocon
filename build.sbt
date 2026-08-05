@@ -7,7 +7,7 @@ ThisBuild / scalaVersion           := "3.8.4"
 ThisBuild / organization           := "io.github.edadma"
 ThisBuild / organizationName       := "edadma"
 ThisBuild / organizationHomepage   := Some(url("https://github.com/edadma"))
-ThisBuild / version                := "0.1.1"
+ThisBuild / version                := "0.1.2"
 ThisBuild / sonatypeCredentialHost := sonatypeCentralHost
 
 ThisBuild / publishConfiguration := publishConfiguration.value.withOverwrite(true).withChecksums(Vector.empty)
@@ -57,7 +57,7 @@ lazy val hocon = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     // so `doc`/`publishSigned` don't warn (compilation keeps it).
     Compile / doc / scalacOptions ~= { _.filterNot(_.startsWith("-Xplugin")) },
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.19" % "test",
-    libraryDependencies += "io.github.edadma" %%% "cross_platform" % "0.1.7",
+    libraryDependencies += "io.github.edadma" %%% "cross_platform" % "0.1.9",
     publishMavenStyle      := true,
     Test / publishArtifact := false,
   )
